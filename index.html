@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatian - Mobile Fix V21</title>
+    <title>Chatian - Direct Room V22</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -59,10 +59,10 @@
     </div>
 
     <!-- Layout Utama -->
-    <div class="flex-1 flex flex-col md:flex-row max-w-4xl mx-auto w-full bg-black min-h-screen border-x border-white/10">
+    <div class="flex-1 flex flex-col md:flex-row max-w-4xl mx-auto w-full bg-black min-h-screen border-x border-white/10 relative overflow-hidden">
         
         <!-- SIDEBAR -->
-        <aside id="sidebar" class="w-full md:w-80 bg-black flex flex-col border-r border-white/10">
+        <aside id="sidebar" class="w-full md:w-80 bg-black flex flex-col border-r border-white/10 absolute inset-0 md:relative z-20 transition-transform duration-300">
             <div class="px-4 py-4 bg-[#1c1c1e] border-b border-white/10 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold text-white">Chatian</h1>
@@ -79,7 +79,7 @@
                 <button onclick="openCreateGroupModal()" class="w-full bg-[#2c2c2e] text-[#007AFF] font-semibold py-2 rounded-xl text-xs">➕ Buat Grup Baru</button>
             </div>
 
-            <div class="p-4 space-y-4">
+            <div class="p-4 space-y-4 overflow-y-auto flex-1">
                 <div id="section-search">
                     <div class="text-[11px] font-semibold text-gray-500 uppercase mb-2">Tambah Teman</div>
                     <div class="flex gap-2">
@@ -99,16 +99,19 @@
         </aside>
 
         <!-- AREA CHAT -->
-        <main class="flex-1 flex flex-col bg-black min-h-[80vh] justify-between">
+        <main id="chat-main-view" class="flex-1 flex flex-col bg-black h-screen md:h-auto justify-between absolute inset-0 md:relative z-10 translate-x-full md:translate-x-0 transition-transform duration-300">
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-1.5">
-                        <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
-                        <span id="tiktok-streak-badge" class="hidden items-center gap-0.5 bg-orange-500/20 border border-orange-500/30 px-2 py-0.5 rounded-full text-[11px] font-bold text-orange-400">
-                            🔥 <span id="streak-number">0</span>
-                        </span>
+                <div class="flex items-center gap-2">
+                    <button onclick="backToSidebar()" class="md:hidden text-[#007AFF] text-sm font-semibold">‹ Kembali</button>
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-1.5">
+                            <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
+                            <span id="tiktok-streak-badge" class="hidden items-center gap-0.5 bg-orange-500/20 border border-orange-500/30 px-2 py-0.5 rounded-full text-[11px] font-bold text-orange-400">
+                                🔥 <span id="streak-number">0</span>
+                            </span>
+                        </div>
+                        <span class="text-[10px] text-gray-400" id="chat-room-status">Online</span>
                     </div>
-                    <span class="text-[10px] text-gray-400" id="chat-room-status">Online</span>
                 </div>
                 
                 <div id="room-settings-container" class="hidden relative">
@@ -143,7 +146,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V21 -->
+    <!-- Firebase & Logika V22 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -399,7 +402,7 @@
             }
             myFriends.forEach((uName) => {
                 const btn = document.createElement("button");
-                btn.className = "w-full text-left px-3 py-2 rounded-xl bg-[#1c1c1e] text-xs flex justify-between items-center mb-1";
+                btn.className = "w-full text-left px-3 py-2.5 rounded-xl bg-[#1c1c1e] text-xs flex justify-between items-center mb-1";
                 btn.innerHTML = `<span class="font-semibold text-white">@${escapeHtml(uName)}</span> <span class="text-[10px] text-[#007AFF]">Chat ›</span>`;
                 btn.onclick = () => { openPrivateChat(uName); };
                 friendsDiv.appendChild(btn);
@@ -418,6 +421,9 @@
             checkAndUpdateRoomStreak(currentChatId);
             updateRoomPetUI(currentChatId);
             subscribeToMessages(currentChatId);
+
+            // Langsung geser layar masuk ke room chat tanpa scroll/tertahan di HP
+            document.getElementById("chat-main-view").classList.remove("translate-x-full");
         }
 
         window.openGroupChat = function(groupId, groupName) {
@@ -430,6 +436,13 @@
             document.getElementById("tiktok-streak-badge").classList.add("hidden");
 
             subscribeToMessages(groupId);
+
+            // Langsung geser layar masuk ke room grup
+            document.getElementById("chat-main-view").classList.remove("translate-x-full");
+        }
+
+        window.backToSidebar = function() {
+            document.getElementById("chat-main-view").classList.add("translate-x-full");
         }
 
         function subscribeToMessages(collectionName) {
