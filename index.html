@@ -3,27 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatAnyuk - Custom Pet & Photo V10</title>
+    <title>ChatAnyuk - Unique Username & Room Pet Streak V11</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 h-screen flex flex-col text-slate-100 overflow-hidden">
 
-    <!-- Modal Login / Nama Pengguna -->
+    <!-- Modal Login / Nama Pengguna (Cek Username Unik) -->
     <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
         <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl border border-slate-700">
             <h2 class="text-xl font-bold mb-2 text-emerald-400">Masuk ChatAnyuk 💬</h2>
-            <p class="text-sm text-slate-400 mb-4">Masukkan nama unik Anda untuk mulai memelihara Pet.</p>
-            <input type="text" id="username-input" placeholder="Nama Anda..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 mb-4 text-white focus:outline-none focus:border-emerald-500">
+            <p class="text-sm text-slate-400 mb-4">Masukkan nama unik Anda. Nama tidak boleh sama dengan pengguna lain.</p>
+            <input type="text" id="username-input" placeholder="Nama unik Anda..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 mb-2 text-white focus:outline-none focus:border-emerald-500">
+            <p id="login-error" class="text-xs text-red-400 mb-3 hidden"></p>
             <button onclick="loginUser()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-lg transition">Masuk</button>
         </div>
     </div>
 
-    <!-- Modal Custom Pet -->
+    <!-- Modal Custom Pet (Dalam Room Chat via Titik Tiga) -->
     <div id="pet-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 hidden">
         <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl border border-slate-700">
-            <h2 class="text-xl font-bold mb-2 text-emerald-400">Custom Pet Kamu 🐾</h2>
-            <p class="text-sm text-slate-400 mb-3">Pilih bentuk dan beri nama peliharaanmu!</p>
+            <h2 class="text-xl font-bold mb-2 text-emerald-400">🐾 Pengaturan Pet di Room Ini</h2>
+            <p class="text-sm text-slate-400 mb-3">Sesuaikan bentuk dan nama peliharaan bersama teman ini!</p>
             
             <label class="text-xs text-slate-300 block mb-1">Pilih Jenis Hewan:</label>
             <select id="pet-type-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mb-3 text-white text-xs focus:outline-none focus:border-emerald-500">
@@ -36,7 +37,7 @@
             </select>
 
             <label class="text-xs text-slate-300 block mb-1">Nama Pet:</label>
-            <input type="text" id="pet-name-input" placeholder="Nama Pet (contoh: Mochi)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mb-4 text-white text-xs focus:outline-none focus:border-emerald-500">
+            <input type="text" id="pet-name-input" placeholder="Nama Pet..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mb-4 text-white text-xs focus:outline-none focus:border-emerald-500">
             
             <div class="flex gap-2">
                 <button onclick="saveCustomPet()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2 rounded-lg text-xs transition">Simpan</button>
@@ -58,19 +59,6 @@
                 <button onclick="logoutUser()" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/20">Keluar</button>
             </div>
 
-            <!-- WIDGET STREAK & CUSTOM PET -->
-            <div class="bg-slate-850 p-3 m-3 rounded-xl border border-emerald-500/30 bg-slate-900/50">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-xs font-bold text-emerald-400 truncate" id="pet-display-name">🐾 Pet: Meong (Lv.1)</span>
-                    <button onclick="togglePetModal(true)" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-emerald-300 px-2 py-0.5 rounded transition">Ubah ⚙️</button>
-                </div>
-                <div class="text-xs text-emerald-300 font-semibold mb-2" id="pet-streak-count">🔥 Streak: 0 Hari</div>
-                <div class="text-[11px] text-slate-300 flex justify-between items-center mt-2 border-t border-slate-800 pt-2">
-                    <span id="pet-revive-info">Nyawa: 5/5</span>
-                    <button onclick="revivePet()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded text-[10px] transition">Pulihkan 💖</button>
-                </div>
-            </div>
-
             <!-- Tab Navigasi -->
             <div class="flex border-b border-slate-700 text-xs font-semibold">
                 <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400">Menu Teman</button>
@@ -82,7 +70,7 @@
                 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50">
                     <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">🔍 Cari & Tambah Teman</div>
                     <div class="flex gap-1.5">
-                        <input type="text" id="search-friend-input" placeholder="Ketik nama user..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        <input type="text" id="search-friend-input" placeholder="Ketik nama unik..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
                         <button onclick="searchAndAddUser()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs transition">Cari</button>
                     </div>
                     <div id="search-result-container" class="mt-2"></div>
@@ -99,12 +87,22 @@
 
         <!-- AREA CHAT UTAMA -->
         <main class="flex-1 flex flex-col bg-slate-900 justify-between w-full">
+            <!-- Header Chat -->
             <header class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleSidebar()" class="md:hidden bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold">☰ Menu</button>
                     <div>
                         <h1 class="font-bold text-base text-emerald-400" id="chat-room-title">🌐 Grup Publik</h1>
-                        <p class="text-xs text-slate-400" id="chat-room-status">Semua pengguna bisa melihat pesan dan merawat Pet.</p>
+                        <p class="text-xs text-slate-400" id="chat-room-status">Semua orang bisa melihat pesan di sini.</p>
+                    </div>
+                </div>
+                <!-- Tombol Titik Tiga (Hanya muncul saat Private Chat) -->
+                <div id="room-settings-container" class="hidden relative">
+                    <button onclick="toggleDropdownMenu()" class="text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-slate-700 text-sm font-bold">⋮</button>
+                    <div id="dropdown-menu" class="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-lg hidden z-40 p-2 space-y-1">
+                        <div class="px-3 py-1 text-[11px] text-slate-400 border-b border-slate-700 font-semibold" id="dropdown-pet-info">🐾 Pet: -</div>
+                        <button onclick="togglePetModal(true); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-emerald-300 hover:bg-slate-700 transition">⚙️ Custom Pet Room</button>
+                        <button onclick="revivePet(); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-lg text-xs text-amber-300 hover:bg-slate-700 transition">💖 Pulihkan Streak (Revive)</button>
                     </div>
                 </div>
             </header>
@@ -112,8 +110,8 @@
             <!-- Wadah Pesan -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
                 <div class="m-auto text-center text-slate-500 text-sm p-4">
-                    <p class="font-semibold text-slate-400">Selamat datang di ChatAnyuk V10!</p>
-                    <p class="text-xs mt-1">Kirim pesan dan rawat Pet custom kesayanganmu setiap hari.</p>
+                    <p class="font-semibold text-slate-400">Selamat datang di ChatAnyuk V11!</p>
+                    <p class="text-xs mt-1">Pilih teman atau masuk ke grup publik untuk mulai mengobrol.</p>
                 </div>
             </div>
 
@@ -137,7 +135,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V10 -->
+    <!-- Firebase & Logika V11 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -157,6 +155,7 @@
         let myName = localStorage.getItem("chat_username") || "";
         let currentChatId = "public_room";
         let currentChatType = "public";
+        let currentActiveFriend = "";
         let unsubscribeMessages = null;
         let base64ImageString = "";
 
@@ -164,27 +163,47 @@
             if (myName) {
                 document.getElementById("login-modal").style.display = "none";
                 document.getElementById("my-profile-name").innerText = "Profil: " + myName;
-                await registerUserToCloud(myName);
                 loadMyFriendsList();
-                checkAndUpdateStreak();
                 openPublicChat();
             }
         }
 
+        // --- VALIDASI USERNAME UNIK ---
         window.loginUser = async function() {
             const input = document.getElementById("username-input").value.trim();
+            const errEl = document.getElementById("login-error");
+            
             if (!input) {
-                alert("Nama tidak boleh kosong!");
+                errEl.innerText = "Nama tidak boleh kosong!";
+                errEl.classList.remove("hidden");
                 return;
             }
-            myName = input;
-            localStorage.setItem("chat_username", myName);
-            document.getElementById("login-modal").style.display = "none";
-            document.getElementById("my-profile-name").innerText = "Profil: " + myName;
-            await registerUserToCloud(myName);
-            loadMyFriendsList();
-            checkAndUpdateStreak();
-            openPublicChat();
+
+            try {
+                // Cek apakah username sudah dipakai di database cloud
+                const docRef = doc(db, "users", input);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    errEl.innerText = "Nama tersebut sudah dipakai orang lain! Pilih nama lain.";
+                    errEl.classList.remove("hidden");
+                    return;
+                }
+
+                // Jika belum ada, daftarkan sebagai milik user ini
+                myName = input;
+                localStorage.setItem("chat_username", myName);
+                await setDoc(docRef, { name: myName, lastActive: serverTimestamp() });
+
+                document.getElementById("login-modal").style.display = "none";
+                document.getElementById("my-profile-name").innerText = "Profil: " + myName;
+                loadMyFriendsList();
+                openPublicChat();
+            } catch (e) {
+                console.error(e);
+                errEl.innerText = "Terjadi kesalahan koneksi.";
+                errEl.classList.remove("hidden");
+            }
         }
 
         window.logoutUser = function() {
@@ -192,45 +211,12 @@
             location.reload();
         }
 
-        async function registerUserToCloud(name) {
-            try {
-                await setDoc(doc(db, "users", name), {
-                    name: name,
-                    lastActive: serverTimestamp()
-                });
-            } catch (e) {
-                console.error("Gagal mendaftarkan user:", e);
-            }
-        }
+        // --- STREAK PET PER ROOM (PRIVATE CHAT) ---
+        function checkAndUpdateRoomStreak(chatRoomId) {
+            if (!chatRoomId || chatRoomId === "public_room") return;
 
-        // --- CUSTOM PET & STREAK SYSTEM ---
-        window.togglePetModal = function(show) {
-            const modal = document.getElementById("pet-modal");
-            if (show) {
-                let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
-                document.getElementById("pet-name-input").value = petData.name;
-                document.getElementById("pet-type-select").value = petData.icon;
-                modal.classList.remove("hidden");
-            } else {
-                modal.classList.add("hidden");
-            }
-        }
-
-        window.saveCustomPet = function() {
-            const name = document.getElementById("pet-name-input").value.trim() || "Peliharaanku";
-            const icon = document.getElementById("pet-type-select").value;
-            
-            const petData = { name, icon };
-            localStorage.setItem("pet_custom_" + myName, JSON.stringify(petData));
-            togglePetModal(false);
-            checkAndUpdateStreak();
-            alert("✨ Pet kamu berhasil di-custom!");
-        }
-
-        function checkAndUpdateStreak() {
-            let streakData = JSON.parse(localStorage.getItem("pet_streak_" + myName) || '{"streak": 0, "lastDate": "", "revives": 5, "lastMonth": ""}');
-            let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
-            
+            let streakKey = "room_streak_" + myName + "_" + chatRoomId;
+            let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 0, "lastDate": "", "revives": 5, "lastMonth": ""}');
             const today = new Date().toISOString().slice(0, 10);
             const currentMonth = new Date().getMonth();
 
@@ -240,21 +226,21 @@
             }
 
             if (streakData.lastDate === today) {
-                // Selesai
+                // Sudah chatan hari ini
             } else if (streakData.lastDate === getYesterdayDate()) {
                 streakData.streak += 1;
                 streakData.lastDate = today;
             } else if (streakData.lastDate !== "") {
                 if (streakData.streak > 0) {
-                    alert("⚠️ Streak Pet mati karena terlewat sehari! Gunakan tombol Pulihkan.");
+                    alert("⚠️ Streak Pet di room ini mati karena terlewat sehari tidak chatan! Gunakan tombol 'Pulihkan Streak' di menu titik tiga.");
                 }
             } else {
                 streakData.streak = 1;
                 streakData.lastDate = today;
             }
 
-            localStorage.setItem("pet_streak_" + myName, JSON.stringify(streakData));
-            updatePetUI(streakData, petData);
+            localStorage.setItem(streakKey, JSON.stringify(streakData));
+            updateRoomPetUI(chatRoomId);
         }
 
         function getYesterdayDate() {
@@ -263,51 +249,63 @@
             return d.toISOString().slice(0, 10);
         }
 
-        function updatePetUI(streakData, petData) {
-            document.getElementById("pet-display-name").innerText = `${petData.icon} ${petData.name} (Lv.${streakData.streak})`;
-            document.getElementById("pet-streak-count").innerText = `🔥 Streak: ${streakData.streak} Hari`;
-            document.getElementById("pet-revive-info").innerText = `Nyawa: ${streakData.revives}/5`;
+        function updateRoomPetUI(chatRoomId) {
+            let streakKey = "room_streak_" + myName + "_" + chatRoomId;
+            let petKey = "room_pet_" + myName + "_" + chatRoomId;
+
+            let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 1, "revives": 5}');
+            let petData = JSON.parse(localStorage.getItem(petKey) || '{"name": "Mochi", "icon": "🐶"}');
+
+            document.getElementById("dropdown-pet-info").innerText = `${petData.icon} ${petData.name} (🔥 Lv.${streakData.streak})`;
+        }
+
+        window.togglePetModal = function(show) {
+            const modal = document.getElementById("pet-modal");
+            if (show) {
+                let petKey = "room_pet_" + myName + "_" + currentChatId;
+                let petData = JSON.parse(localStorage.getItem(petKey) || '{"name": "Mochi", "icon": "🐶"}');
+                document.getElementById("pet-name-input").value = petData.name;
+                document.getElementById("pet-type-select").value = petData.icon;
+                modal.classList.remove("hidden");
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        window.saveCustomPet = function() {
+            const name = document.getElementById("pet-name-input").value.trim() || "Peliharaan";
+            const icon = document.getElementById("pet-type-select").value;
+            let petKey = "room_pet_" + myName + "_" + currentChatId;
+
+            localStorage.setItem(petKey, JSON.stringify({ name, icon }));
+            togglePetModal(false);
+            updateRoomPetUI(currentChatId);
+            alert("✨ Pet di room ini berhasil di-custom!");
         }
 
         window.revivePet = function() {
-            let streakData = JSON.parse(localStorage.getItem("pet_streak_" + myName) || '{"streak": 0, "lastDate": "", "revives": 5}');
-            let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
+            if (currentChatType !== "private") return;
+            let streakKey = "room_streak_" + myName + "_" + currentChatId;
+            let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 1, "revives": 5}');
 
             if (streakData.revives > 0) {
                 streakData.revives -= 1;
                 streakData.streak = Math.max(streakData.streak, 1);
                 streakData.lastDate = new Date().toISOString().slice(0, 10);
-                localStorage.setItem("pet_streak_" + myName, JSON.stringify(streakData));
-                updatePetUI(streakData, petData);
-                alert("💖 Berhasil memulihkan Streak Pet!");
+                localStorage.setItem(streakKey, JSON.stringify(streakData));
+                updateRoomPetUI(currentChatId);
+                alert("💖 Berhasil memulihkan Streak Pet di room ini!");
             } else {
                 alert("❌ Jatah pemulihan 5x di bulan ini sudah habis!");
             }
         }
 
-        // --- FOTO & CHAT ---
-        window.previewImage = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (file.size > 800 * 1024) {
-                alert("Maksimal ukuran foto 800KB!");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                base64ImageString = e.target.result;
-                document.getElementById("image-name").innerText = file.name;
-                document.getElementById("image-preview-container").classList.remove("hidden");
-            }
-            reader.readAsDataURL(file);
+        window.toggleDropdownMenu = function() {
+            const menu = document.getElementById("dropdown-menu");
+            menu.classList.toggle("hidden");
         }
 
-        window.cancelImage = function() {
-            base64ImageString = "";
-            document.getElementById("image-input").value = "";
-            document.getElementById("image-preview-container").classList.add("hidden");
-        }
-
+        // --- PENCARIAN & TAMBAH TEMAN ---
         window.searchAndAddUser = async function() {
             const queryName = document.getElementById("search-friend-input").value.trim();
             const resultDiv = document.getElementById("search-result-container");
@@ -322,7 +320,7 @@
                         </div>
                     `;
                 } else {
-                    resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Tidak ditemukan.</p>`;
+                    resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Nama tidak ditemukan.</p>`;
                 }
             } catch (e) {
                 resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Error.</p>`;
@@ -368,6 +366,7 @@
                 document.getElementById("tab-public-btn").className = "flex-1 py-3 text-center text-slate-400 hover:text-white";
                 document.getElementById("chat-room-title").innerText = "Menu Teman";
                 document.getElementById("chat-room-status").innerText = "Pilih teman dari daftar.";
+                document.getElementById("room-settings-container").classList.add("hidden");
             }
             if(window.innerWidth < 768) toggleSidebar();
         }
@@ -377,15 +376,22 @@
             currentChatId = "public_room";
             document.getElementById("chat-room-title").innerText = "🌐 Grup Publik";
             document.getElementById("chat-room-status").innerText = "Semua orang bisa melihat pesan di sini.";
+            document.getElementById("room-settings-container").classList.add("hidden");
             subscribeToMessages("public_messages");
         }
 
         window.openPrivateChat = function(friendName) {
             currentChatType = "private";
+            currentActiveFriend = friendName;
             const sortedNames = [myName, friendName].sort();
             currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
-            document.getElementById("chat-room-title").innerText = "🔒 Private Chat: " + friendName;
-            document.getElementById("chat-room-status").innerText = "Obrolan privat dengan " + friendName;
+
+            document.getElementById("chat-room-title").innerText = "🔒 " + friendName;
+            document.getElementById("chat-room-status").innerText = "Private chat terenkripsi";
+            document.getElementById("room-settings-container").classList.remove("hidden");
+            
+            checkAndUpdateRoomStreak(currentChatId);
+            updateRoomPetUI(currentChatId);
             subscribeToMessages(currentChatId);
         }
 
@@ -423,6 +429,28 @@
             });
         }
 
+        window.previewImage = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 800 * 1024) {
+                alert("Maksimal ukuran foto 800KB!");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64ImageString = e.target.result;
+                document.getElementById("image-name").innerText = file.name;
+                document.getElementById("image-preview-container").classList.remove("hidden");
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.cancelImage = function() {
+            base64ImageString = "";
+            document.getElementById("image-input").value = "";
+            document.getElementById("image-preview-container").classList.add("hidden");
+        }
+
         window.sendMessage = async function(e) {
             e.preventDefault();
             const msgInput = document.getElementById("message-input");
@@ -441,6 +469,11 @@
                 await addDoc(collection(db, targetCol), messageData);
                 msgInput.value = "";
                 cancelImage();
+
+                // Jika sedang chatan privat, update streak pet room ini
+                if (currentChatType === "private") {
+                    checkAndUpdateRoomStreak(currentChatId);
+                }
             } catch (error) {
                 alert("Gagal mengirim pesan.");
             }
