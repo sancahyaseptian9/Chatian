@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Online - Search & Add V7</title>
+    <title>ChatAnyuk - Custom Pet & Photo V10</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -12,10 +12,36 @@
     <!-- Modal Login / Nama Pengguna -->
     <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
         <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl border border-slate-700">
-            <h2 class="text-xl font-bold mb-2 text-emerald-400">Masuk Aplikasi Chat 💬</h2>
-            <p class="text-sm text-slate-400 mb-4">Masukkan nama unik Anda (contoh: Andi atau Budi).</p>
+            <h2 class="text-xl font-bold mb-2 text-emerald-400">Masuk ChatAnyuk 💬</h2>
+            <p class="text-sm text-slate-400 mb-4">Masukkan nama unik Anda untuk mulai memelihara Pet.</p>
             <input type="text" id="username-input" placeholder="Nama Anda..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 mb-4 text-white focus:outline-none focus:border-emerald-500">
             <button onclick="loginUser()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-lg transition">Masuk</button>
+        </div>
+    </div>
+
+    <!-- Modal Custom Pet -->
+    <div id="pet-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl border border-slate-700">
+            <h2 class="text-xl font-bold mb-2 text-emerald-400">Custom Pet Kamu 🐾</h2>
+            <p class="text-sm text-slate-400 mb-3">Pilih bentuk dan beri nama peliharaanmu!</p>
+            
+            <label class="text-xs text-slate-300 block mb-1">Pilih Jenis Hewan:</label>
+            <select id="pet-type-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mb-3 text-white text-xs focus:outline-none focus:border-emerald-500">
+                <option value="🐶">Anjing (Dog)</option>
+                <option value="🐱">Kucing (Cat)</option>
+                <option value="🐰">Kelinci (Rabbit)</option>
+                <option value="🐲">Naga (Dragon)</option>
+                <option value="🦊">Rubah (Fox)</option>
+                <option value="🐼">Panda (Panda)</option>
+            </select>
+
+            <label class="text-xs text-slate-300 block mb-1">Nama Pet:</label>
+            <input type="text" id="pet-name-input" placeholder="Nama Pet (contoh: Mochi)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 mb-4 text-white text-xs focus:outline-none focus:border-emerald-500">
+            
+            <div class="flex gap-2">
+                <button onclick="saveCustomPet()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2 rounded-lg text-xs transition">Simpan</button>
+                <button onclick="togglePetModal(false)" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition">Batal</button>
+            </div>
         </div>
     </div>
 
@@ -32,6 +58,19 @@
                 <button onclick="logoutUser()" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/20">Keluar</button>
             </div>
 
+            <!-- WIDGET STREAK & CUSTOM PET -->
+            <div class="bg-slate-850 p-3 m-3 rounded-xl border border-emerald-500/30 bg-slate-900/50">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-bold text-emerald-400 truncate" id="pet-display-name">🐾 Pet: Meong (Lv.1)</span>
+                    <button onclick="togglePetModal(true)" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-emerald-300 px-2 py-0.5 rounded transition">Ubah ⚙️</button>
+                </div>
+                <div class="text-xs text-emerald-300 font-semibold mb-2" id="pet-streak-count">🔥 Streak: 0 Hari</div>
+                <div class="text-[11px] text-slate-300 flex justify-between items-center mt-2 border-t border-slate-800 pt-2">
+                    <span id="pet-revive-info">Nyawa: 5/5</span>
+                    <button onclick="revivePet()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded text-[10px] transition">Pulihkan 💖</button>
+                </div>
+            </div>
+
             <!-- Tab Navigasi -->
             <div class="flex border-b border-slate-700 text-xs font-semibold">
                 <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400">Menu Teman</button>
@@ -40,21 +79,17 @@
 
             <!-- Konten Sidebar -->
             <div class="flex-1 overflow-y-auto p-3 space-y-4">
-                
-                <!-- FITUR CARI & TAMBAH TEMAN -->
                 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50">
                     <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">🔍 Cari & Tambah Teman</div>
                     <div class="flex gap-1.5">
                         <input type="text" id="search-friend-input" placeholder="Ketik nama user..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
                         <button onclick="searchAndAddUser()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs transition">Cari</button>
                     </div>
-                    <!-- Hasil Pencarian -->
                     <div id="search-result-container" class="mt-2"></div>
                 </div>
 
-                <!-- Daftar Teman Saya -->
                 <div>
-                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Daftar Teman Saya</div>
+                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">Daftar Teman Saya</div>
                     <div id="friends-list" class="space-y-1">
                         <p class="text-xs text-slate-500 italic">Belum ada teman ditambahkan.</p>
                     </div>
@@ -64,13 +99,12 @@
 
         <!-- AREA CHAT UTAMA -->
         <main class="flex-1 flex flex-col bg-slate-900 justify-between w-full">
-            <!-- Header Chat -->
             <header class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md">
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="md:hidden bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold">☰ Menu Teman</button>
+                    <button onclick="toggleSidebar()" class="md:hidden bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold">☰ Menu</button>
                     <div>
-                        <h1 class="font-bold text-base text-emerald-400" id="chat-room-title">Pilih Obrolan / Grup Publik</h1>
-                        <p class="text-xs text-slate-400" id="chat-room-status">Gunakan fitur cari teman di menu samping.</p>
+                        <h1 class="font-bold text-base text-emerald-400" id="chat-room-title">🌐 Grup Publik</h1>
+                        <p class="text-xs text-slate-400" id="chat-room-status">Semua pengguna bisa melihat pesan dan merawat Pet.</p>
                     </div>
                 </div>
             </header>
@@ -78,43 +112,53 @@
             <!-- Wadah Pesan -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
                 <div class="m-auto text-center text-slate-500 text-sm p-4">
-                    <p class="font-semibold text-slate-400">Selamat datang di Aplikasi Chat!</p>
-                    <p class="text-xs mt-1">Ketik nama teman Anda di kolom <span class="text-emerald-400 font-bold">Cari & Tambah Teman</span> di menu samping untuk mulai mengobrol secara privat.</p>
+                    <p class="font-semibold text-slate-400">Selamat datang di ChatAnyuk V10!</p>
+                    <p class="text-xs mt-1">Kirim pesan dan rawat Pet custom kesayanganmu setiap hari.</p>
                 </div>
             </div>
 
-            <!-- Form Kirim Pesan -->
+            <!-- Form Kirim Pesan & Gambar -->
             <footer class="bg-slate-800 border-t border-slate-700 p-3">
-                <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2 max-w-4xl mx-auto">
+                <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2 max-w-4xl items-center mx-auto">
+                    <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 p-2.5 rounded-xl transition flex items-center justify-center" title="Kirim Foto">
+                        📷
+                        <input type="file" id="image-input" accept="image/*" onchange="previewImage(event)" class="hidden">
+                    </label>
+
                     <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
                     <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-6 py-3 rounded-xl transition">Kirim</button>
                 </form>
+                <div id="image-preview-container" class="hidden mt-2 flex items-center gap-2 max-w-4xl mx-auto bg-slate-900 p-2 rounded-lg border border-slate-700">
+                    <span class="text-xs text-emerald-400">Lampiran Foto:</span>
+                    <span id="image-name" class="text-xs text-slate-300 truncate flex-1"></span>
+                    <button type="button" onclick="cancelImage()" class="text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded">Batal</button>
+                </div>
             </footer>
         </main>
     </div>
 
-    <!-- Firebase & Logika V7 -->
+    <!-- Firebase & Logika V10 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyAtNNaKnJZkB5Jeq5zNiGXaunW_lwPB-Wk",
-            authDomain: "chatianweb.firebaseapp.com",
-            projectId: "chatianweb",
-            storageBucket: "chatianweb.appspot.com",
-            messagingSenderId: "183569771269",
-            appId: "1:183569771269:web:73e689af57fcd68f3ee65c",
-            measurementId: "G-QYVZ8VPZE"
+            apiKey: "AIzaSyCu6XJmJD4MHBFPfwohvy8ZkouoonN3uPw",
+            authDomain: "chatanyuk-9f2db.firebaseapp.com",
+            projectId: "chatanyuk-9f2db",
+            storageBucket: "chatanyuk-9f2db.firebasestorage.app",
+            messagingSenderId: "760813767940",
+            appId: "1:760813767940:web:999a798c74814d03be9451"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         let myName = localStorage.getItem("chat_username") || "";
-        let currentChatId = "";
-        let currentChatType = "";
+        let currentChatId = "public_room";
+        let currentChatType = "public";
         let unsubscribeMessages = null;
+        let base64ImageString = "";
 
         window.onload = async function() {
             if (myName) {
@@ -122,6 +166,8 @@
                 document.getElementById("my-profile-name").innerText = "Profil: " + myName;
                 await registerUserToCloud(myName);
                 loadMyFriendsList();
+                checkAndUpdateStreak();
+                openPublicChat();
             }
         }
 
@@ -137,6 +183,8 @@
             document.getElementById("my-profile-name").innerText = "Profil: " + myName;
             await registerUserToCloud(myName);
             loadMyFriendsList();
+            checkAndUpdateStreak();
+            openPublicChat();
         }
 
         window.logoutUser = function() {
@@ -155,41 +203,129 @@
             }
         }
 
-        // Cari user langsung ke database berdasarkan nama yang diketik
+        // --- CUSTOM PET & STREAK SYSTEM ---
+        window.togglePetModal = function(show) {
+            const modal = document.getElementById("pet-modal");
+            if (show) {
+                let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
+                document.getElementById("pet-name-input").value = petData.name;
+                document.getElementById("pet-type-select").value = petData.icon;
+                modal.classList.remove("hidden");
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        window.saveCustomPet = function() {
+            const name = document.getElementById("pet-name-input").value.trim() || "Peliharaanku";
+            const icon = document.getElementById("pet-type-select").value;
+            
+            const petData = { name, icon };
+            localStorage.setItem("pet_custom_" + myName, JSON.stringify(petData));
+            togglePetModal(false);
+            checkAndUpdateStreak();
+            alert("✨ Pet kamu berhasil di-custom!");
+        }
+
+        function checkAndUpdateStreak() {
+            let streakData = JSON.parse(localStorage.getItem("pet_streak_" + myName) || '{"streak": 0, "lastDate": "", "revives": 5, "lastMonth": ""}');
+            let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
+            
+            const today = new Date().toISOString().slice(0, 10);
+            const currentMonth = new Date().getMonth();
+
+            if (streakData.lastMonth !== currentMonth) {
+                streakData.revives = 5;
+                streakData.lastMonth = currentMonth;
+            }
+
+            if (streakData.lastDate === today) {
+                // Selesai
+            } else if (streakData.lastDate === getYesterdayDate()) {
+                streakData.streak += 1;
+                streakData.lastDate = today;
+            } else if (streakData.lastDate !== "") {
+                if (streakData.streak > 0) {
+                    alert("⚠️ Streak Pet mati karena terlewat sehari! Gunakan tombol Pulihkan.");
+                }
+            } else {
+                streakData.streak = 1;
+                streakData.lastDate = today;
+            }
+
+            localStorage.setItem("pet_streak_" + myName, JSON.stringify(streakData));
+            updatePetUI(streakData, petData);
+        }
+
+        function getYesterdayDate() {
+            let d = new Date();
+            d.setDate(d.getDate() - 1);
+            return d.toISOString().slice(0, 10);
+        }
+
+        function updatePetUI(streakData, petData) {
+            document.getElementById("pet-display-name").innerText = `${petData.icon} ${petData.name} (Lv.${streakData.streak})`;
+            document.getElementById("pet-streak-count").innerText = `🔥 Streak: ${streakData.streak} Hari`;
+            document.getElementById("pet-revive-info").innerText = `Nyawa: ${streakData.revives}/5`;
+        }
+
+        window.revivePet = function() {
+            let streakData = JSON.parse(localStorage.getItem("pet_streak_" + myName) || '{"streak": 0, "lastDate": "", "revives": 5}');
+            let petData = JSON.parse(localStorage.getItem("pet_custom_" + myName) || '{"name": "Mochi", "icon": "🐶"}');
+
+            if (streakData.revives > 0) {
+                streakData.revives -= 1;
+                streakData.streak = Math.max(streakData.streak, 1);
+                streakData.lastDate = new Date().toISOString().slice(0, 10);
+                localStorage.setItem("pet_streak_" + myName, JSON.stringify(streakData));
+                updatePetUI(streakData, petData);
+                alert("💖 Berhasil memulihkan Streak Pet!");
+            } else {
+                alert("❌ Jatah pemulihan 5x di bulan ini sudah habis!");
+            }
+        }
+
+        // --- FOTO & CHAT ---
+        window.previewImage = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 800 * 1024) {
+                alert("Maksimal ukuran foto 800KB!");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                base64ImageString = e.target.result;
+                document.getElementById("image-name").innerText = file.name;
+                document.getElementById("image-preview-container").classList.remove("hidden");
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.cancelImage = function() {
+            base64ImageString = "";
+            document.getElementById("image-input").value = "";
+            document.getElementById("image-preview-container").classList.add("hidden");
+        }
+
         window.searchAndAddUser = async function() {
             const queryName = document.getElementById("search-friend-input").value.trim();
             const resultDiv = document.getElementById("search-result-container");
-
-            if (!queryName) {
-                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Ketik nama dulu!</p>`;
-                return;
-            }
-
-            if (queryName === myName) {
-                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Tidak bisa mencari diri sendiri.</p>`;
-                return;
-            }
-
-            resultDiv.innerHTML = `<p class="text-[10px] text-slate-400 mt-1">Mencari...</p>`;
-
+            if (!queryName) return;
             try {
-                const docRef = doc(db, "users", queryName);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    // User ditemukan di database! Tampilkan tombol tambah
+                const docSnap = await getDoc(doc(db, "users", queryName));
+                if (docSnap.exists() && queryName !== myName) {
                     resultDiv.innerHTML = `
                         <div class="mt-2 bg-slate-800 p-2 rounded-lg border border-slate-700 flex justify-between items-center text-xs">
                             <span class="text-emerald-300 font-bold">✔ ${escapeHtml(queryName)}</span>
-                            <button onclick="addFriend('${escapeHtml(queryName)}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2.5 py-1 rounded text-[10px]">Tambah +</button>
+                            <button onclick="addFriend('${escapeHtml(queryName)}')" class="bg-emerald-500 text-slate-950 font-bold px-2 py-1 rounded text-[10px]">Tambah +</button>
                         </div>
                     `;
                 } else {
-                    resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Nama "${escapeHtml(queryName)}" tidak ditemukan.</p>`;
+                    resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Tidak ditemukan.</p>`;
                 }
             } catch (e) {
-                console.error(e);
-                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Terjadi kesalahan pencarian.</p>`;
+                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Error.</p>`;
             }
         }
 
@@ -198,33 +334,26 @@
             if (!myFriends.includes(friendName)) {
                 myFriends.push(friendName);
                 localStorage.setItem("my_friends_" + myName, JSON.stringify(myFriends));
-                alert(friendName + " berhasil ditambahkan ke daftar teman!");
+                alert("Berhasil ditambahkan!");
                 document.getElementById("search-friend-input").value = "";
                 document.getElementById("search-result-container").innerHTML = "";
                 loadMyFriendsList();
-            } else {
-                alert(friendName + " sudah ada di daftar teman Anda.");
             }
         }
 
         function loadMyFriendsList() {
             const friendsDiv = document.getElementById("friends-list");
             let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
-
             friendsDiv.innerHTML = "";
             if (myFriends.length === 0) {
-                friendsDiv.innerHTML = `<p class="text-xs text-slate-500 italic">Belum ada teman ditambahkan.</p>`;
+                friendsDiv.innerHTML = `<p class="text-xs text-slate-500 italic">Belum ada teman.</p>`;
                 return;
             }
-
             myFriends.forEach((uName) => {
                 const btn = document.createElement("button");
-                btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-xs flex justify-between items-center transition shadow-sm";
-                btn.innerHTML = `<span class="font-bold text-emerald-300">👤 ${escapeHtml(uName)}</span> <span class="text-[10px] text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded font-semibold">Chat Privat</span>`;
-                btn.onclick = () => {
-                    openPrivateChat(uName);
-                    if(window.innerWidth < 768) toggleSidebar();
-                };
+                btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-xs flex justify-between items-center transition shadow-sm mb-1";
+                btn.innerHTML = `<span class="font-bold text-emerald-300">👤 ${escapeHtml(uName)}</span> <span class="text-[10px] text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded font-semibold">Chat</span>`;
+                btn.onclick = () => { openPrivateChat(uName); if(window.innerWidth < 768) toggleSidebar(); };
                 friendsDiv.appendChild(btn);
             });
         }
@@ -234,21 +363,20 @@
                 document.getElementById("tab-public-btn").className = "flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400";
                 document.getElementById("tab-chats-btn").className = "flex-1 py-3 text-center text-slate-400 hover:text-white";
                 openPublicChat();
-                if(window.innerWidth < 768) toggleSidebar();
             } else {
                 document.getElementById("tab-chats-btn").className = "flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400";
                 document.getElementById("tab-public-btn").className = "flex-1 py-3 text-center text-slate-400 hover:text-white";
                 document.getElementById("chat-room-title").innerText = "Menu Teman";
-                document.getElementById("chat-room-status").innerText = "Pilih teman dari daftar samping.";
-                if(window.innerWidth < 768) toggleSidebar();
+                document.getElementById("chat-room-status").innerText = "Pilih teman dari daftar.";
             }
+            if(window.innerWidth < 768) toggleSidebar();
         }
 
         function openPublicChat() {
             currentChatType = "public";
             currentChatId = "public_room";
             document.getElementById("chat-room-title").innerText = "🌐 Grup Publik";
-            document.getElementById("chat-room-status").innerText = "Semua pengguna bisa melihat pesan di sini.";
+            document.getElementById("chat-room-status").innerText = "Semua orang bisa melihat pesan di sini.";
             subscribeToMessages("public_messages");
         }
 
@@ -256,7 +384,6 @@
             currentChatType = "private";
             const sortedNames = [myName, friendName].sort();
             currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
-
             document.getElementById("chat-room-title").innerText = "🔒 Private Chat: " + friendName;
             document.getElementById("chat-room-status").innerText = "Obrolan privat dengan " + friendName;
             subscribeToMessages(currentChatId);
@@ -264,34 +391,29 @@
 
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
-
             const chatContainer = document.getElementById("chat-container");
             const q = query(collection(db, collectionName), orderBy("createdAt", "asc"));
 
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 chatContainer.innerHTML = "";
                 if (snapshot.empty) {
-                    chatContainer.innerHTML = `<div class="m-auto text-center text-slate-500 text-xs">Belum ada pesan. Mulai obrolan sekarang!</div>`;
+                    chatContainer.innerHTML = `<div class="m-auto text-center text-slate-500 text-xs">Belum ada pesan. Mulai obrolan!</div>`;
                     return;
                 }
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const isMe = data.name === myName;
-                    
-                    let timeString = "";
-                    if (data.createdAt) {
-                        const date = data.createdAt.toDate();
-                        timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    }
+                    let timeString = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                    let imageHtml = data.image ? `<img src="${data.image}" class="mt-2 rounded-lg max-h-48 object-cover cursor-pointer" onclick="window.open('${data.image}')">` : "";
 
                     const bubble = document.createElement("div");
                     bubble.className = `flex flex-col max-w-[75%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
-                    
                     bubble.innerHTML = `
                         <span class="text-[10px] text-slate-400 mb-1 px-1 font-medium">${escapeHtml(data.name)}</span>
                         <div class="p-3 rounded-2xl text-sm ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-none'} shadow-sm">
-                            <div class="break-words">${escapeHtml(data.text)}</div>
+                            ${data.text ? `<div class="break-words">${escapeHtml(data.text)}</div>` : ''}
+                            ${imageHtml}
                             <div class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'} text-right mt-1">${timeString}</div>
                         </div>
                     `;
@@ -305,38 +427,27 @@
             e.preventDefault();
             const msgInput = document.getElementById("message-input");
             const text = msgInput.value.trim();
-            if (!text) return;
+            if (!text && !base64ImageString) return;
 
-            if (!currentChatId || currentChatId === "public_room") {
-                try {
-                    await addDoc(collection(db, "public_messages"), {
-                        name: myName,
-                        text: text,
-                        createdAt: serverTimestamp()
-                    });
-                    msgInput.value = "";
-                } catch (error) {
-                    console.error("Gagal kirim:", error);
-                }
-            } else if (currentChatType === "private") {
-                try {
-                    await addDoc(collection(db, currentChatId), {
-                        name: myName,
-                        text: text,
-                        createdAt: serverTimestamp()
-                    });
-                    msgInput.value = "";
-                } catch (error) {
-                    console.error("Gagal kirim privat:", error);
-                }
-            } else {
-                alert("Silakan pilih teman atau Grup Publik terlebih dahulu!");
+            const messageData = {
+                name: myName,
+                text: text,
+                image: base64ImageString || "",
+                createdAt: serverTimestamp()
+            };
+
+            const targetCol = currentChatType === "public" ? "public_messages" : currentChatId;
+            try {
+                await addDoc(collection(db, targetCol), messageData);
+                msgInput.value = "";
+                cancelImage();
+            } catch (error) {
+                alert("Gagal mengirim pesan.");
             }
         }
 
         window.toggleSidebar = function() {
-            const sidebar = document.getElementById("sidebar");
-            sidebar.classList.toggle("-translate-x-full");
+            document.getElementById("sidebar").classList.toggle("-translate-x-full");
         }
 
         function escapeHtml(str) {
