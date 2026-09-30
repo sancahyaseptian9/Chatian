@@ -158,7 +158,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V14 (Redirect Auth) -->
+    <!-- Firebase & Logika V14 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -184,7 +184,6 @@
         let unsubscribeMessages = null;
         let base64ImageString = "";
 
-        // Tangkap hasil setelah redirect dari Google
         getRedirectResult(auth).catch((error) => {
             console.error("Redirect error:", error);
         });
@@ -244,7 +243,7 @@
                 streakData.lastDate = today;
             } else if (streakData.lastDate !== "") {
                 if (streakData.streak > 0) {
-                    alert("⚠️ Streak Pet di ruang ini mati karena terlewat sehari!");
+                    alert("⚠️️ Streak Pet di ruang ini mati karena terlewat sehari!");
                 }
             } else {
                 streakData.streak = 1;
