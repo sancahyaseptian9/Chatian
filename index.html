@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatAnyuk - iOS Google Auth V13</title>
+    <title>ChatAnyuk - iOS Google Redirect V14</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -158,10 +158,10 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V13 -->
+    <!-- Firebase & Logika V14 (Redirect Auth) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -183,6 +183,11 @@
         let currentChatType = "public";
         let unsubscribeMessages = null;
         let base64ImageString = "";
+
+        // Tangkap hasil setelah redirect dari Google
+        getRedirectResult(auth).catch((error) => {
+            console.error("Redirect error:", error);
+        });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -206,10 +211,10 @@
 
         window.loginWithGoogle = async function() {
             try {
-                await signInWithPopup(auth, provider);
+                await signInWithRedirect(auth, provider);
             } catch (error) {
                 console.error(error);
-                document.getElementById("login-error").innerText = "Gagal login dengan Google. Pastikan Pop-up tidak diblokir.";
+                document.getElementById("login-error").innerText = "Gagal mengalihkan ke Google.";
                 document.getElementById("login-error").classList.remove("hidden");
             }
         }
