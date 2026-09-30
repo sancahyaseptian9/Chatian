@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Online - Search & Add V7</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 h-screen flex flex-col text-slate-100 overflow-hidden">
+
+    <!-- Modal Login / Nama Pengguna -->
+    <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl border border-slate-700">
+            <h2 class="text-xl font-bold mb-2 text-emerald-400">Masuk Aplikasi Chat 💬</h2>
+            <p class="text-sm text-slate-400 mb-4">Masukkan nama unik Anda (contoh: Andi atau Budi).</p>
+            <input type="text" id="username-input" placeholder="Nama Anda..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 mb-4 text-white focus:outline-none focus:border-emerald-500">
+            <button onclick="loginUser()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-lg transition">Masuk</button>
+        </div>
+    </div>
+
+    <!-- Layout Utama -->
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="w-80 bg-slate-800 border-r border-slate-700 flex flex-col absolute md:relative inset-y-0 left-0 z-30 transition-transform transform -translate-x-full md:translate-x-0">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-850">
+                <div>
+                    <h2 class="font-bold text-emerald-400 text-sm truncate w-36" id="my-profile-name">Profil: -</h2>
+                    <span class="text-[10px] text-emerald-400 flex items-center gap-1">● Online</span>
+                </div>
+                <button onclick="logoutUser()" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/20">Keluar</button>
+            </div>
+
+            <!-- Tab Navigasi -->
+            <div class="flex border-b border-slate-700 text-xs font-semibold">
+                <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400">Menu Teman</button>
+                <button onclick="switchTab('public')" id="tab-public-btn" class="flex-1 py-3 text-center text-slate-400 hover:text-white">Grup Publik</button>
+            </div>
+
+            <!-- Konten Sidebar -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-4">
+                
+                <!-- FITUR CARI & TAMBAH TEMAN -->
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50">
+                    <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">🔍 Cari & Tambah Teman</div>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="search-friend-input" placeholder="Ketik nama user..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        <button onclick="searchAndAddUser()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs transition">Cari</button>
+                    </div>
+                    <!-- Hasil Pencarian -->
+                    <div id="search-result-container" class="mt-2"></div>
+                </div>
+
+                <!-- Daftar Teman Saya -->
+                <div>
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Daftar Teman Saya</div>
+                    <div id="friends-list" class="space-y-1">
+                        <p class="text-xs text-slate-500 italic">Belum ada teman ditambahkan.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- AREA CHAT UTAMA -->
+        <main class="flex-1 flex flex-col bg-slate-900 justify-between w-full">
+            <!-- Header Chat -->
+            <header class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="md:hidden bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold">☰ Menu Teman</button>
+                    <div>
+                        <h1 class="font-bold text-base text-emerald-400" id="chat-room-title">Pilih Obrolan / Grup Publik</h1>
+                        <p class="text-xs text-slate-400" id="chat-room-status">Gunakan fitur cari teman di menu samping.</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Wadah Pesan -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col">
+                <div class="m-auto text-center text-slate-500 text-sm p-4">
+                    <p class="font-semibold text-slate-400">Selamat datang di Aplikasi Chat!</p>
+                    <p class="text-xs mt-1">Ketik nama teman Anda di kolom <span class="text-emerald-400 font-bold">Cari & Tambah Teman</span> di menu samping untuk mulai mengobrol secara privat.</p>
+                </div>
+            </div>
+
+            <!-- Form Kirim Pesan -->
+            <footer class="bg-slate-800 border-t border-slate-700 p-3">
+                <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2 max-w-4xl mx-auto">
+                    <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500">
+                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-6 py-3 rounded-xl transition">Kirim</button>
+                </form>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Firebase & Logika V7 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtNNaKnJZkB5Jeq5zNiGXaunW_lwPB-Wk",
+            authDomain: "chatianweb.firebaseapp.com",
+            projectId: "chatianweb",
+            storageBucket: "chatianweb.appspot.com",
+            messagingSenderId: "183569771269",
+            appId: "1:183569771269:web:73e689af57fcd68f3ee65c",
+            measurementId: "G-QYVZ8VPZE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let myName = localStorage.getItem("chat_username") || "";
+        let currentChatId = "";
+        let currentChatType = "";
+        let unsubscribeMessages = null;
+
+        window.onload = async function() {
+            if (myName) {
+                document.getElementById("login-modal").style.display = "none";
+                document.getElementById("my-profile-name").innerText = "Profil: " + myName;
+                await registerUserToCloud(myName);
+                loadMyFriendsList();
+            }
+        }
+
+        window.loginUser = async function() {
+            const input = document.getElementById("username-input").value.trim();
+            if (!input) {
+                alert("Nama tidak boleh kosong!");
+                return;
+            }
+            myName = input;
+            localStorage.setItem("chat_username", myName);
+            document.getElementById("login-modal").style.display = "none";
+            document.getElementById("my-profile-name").innerText = "Profil: " + myName;
+            await registerUserToCloud(myName);
+            loadMyFriendsList();
+        }
+
+        window.logoutUser = function() {
+            localStorage.removeItem("chat_username");
+            location.reload();
+        }
+
+        async function registerUserToCloud(name) {
+            try {
+                await setDoc(doc(db, "users", name), {
+                    name: name,
+                    lastActive: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Gagal mendaftarkan user:", e);
+            }
+        }
+
+        // Cari user langsung ke database berdasarkan nama yang diketik
+        window.searchAndAddUser = async function() {
+            const queryName = document.getElementById("search-friend-input").value.trim();
+            const resultDiv = document.getElementById("search-result-container");
+
+            if (!queryName) {
+                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Ketik nama dulu!</p>`;
+                return;
+            }
+
+            if (queryName === myName) {
+                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Tidak bisa mencari diri sendiri.</p>`;
+                return;
+            }
+
+            resultDiv.innerHTML = `<p class="text-[10px] text-slate-400 mt-1">Mencari...</p>`;
+
+            try {
+                const docRef = doc(db, "users", queryName);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    // User ditemukan di database! Tampilkan tombol tambah
+                    resultDiv.innerHTML = `
+                        <div class="mt-2 bg-slate-800 p-2 rounded-lg border border-slate-700 flex justify-between items-center text-xs">
+                            <span class="text-emerald-300 font-bold">✔ ${escapeHtml(queryName)}</span>
+                            <button onclick="addFriend('${escapeHtml(queryName)}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-2.5 py-1 rounded text-[10px]">Tambah +</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Nama "${escapeHtml(queryName)}" tidak ditemukan.</p>`;
+                }
+            } catch (e) {
+                console.error(e);
+                resultDiv.innerHTML = `<p class="text-[10px] text-red-400 mt-1">Terjadi kesalahan pencarian.</p>`;
+            }
+        }
+
+        window.addFriend = function(friendName) {
+            let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
+            if (!myFriends.includes(friendName)) {
+                myFriends.push(friendName);
+                localStorage.setItem("my_friends_" + myName, JSON.stringify(myFriends));
+                alert(friendName + " berhasil ditambahkan ke daftar teman!");
+                document.getElementById("search-friend-input").value = "";
+                document.getElementById("search-result-container").innerHTML = "";
+                loadMyFriendsList();
+            } else {
+                alert(friendName + " sudah ada di daftar teman Anda.");
+            }
+        }
+
+        function loadMyFriendsList() {
+            const friendsDiv = document.getElementById("friends-list");
+            let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
+
+            friendsDiv.innerHTML = "";
+            if (myFriends.length === 0) {
+                friendsDiv.innerHTML = `<p class="text-xs text-slate-500 italic">Belum ada teman ditambahkan.</p>`;
+                return;
+            }
+
+            myFriends.forEach((uName) => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left px-3 py-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-xs flex justify-between items-center transition shadow-sm";
+                btn.innerHTML = `<span class="font-bold text-emerald-300">👤 ${escapeHtml(uName)}</span> <span class="text-[10px] text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded font-semibold">Chat Privat</span>`;
+                btn.onclick = () => {
+                    openPrivateChat(uName);
+                    if(window.innerWidth < 768) toggleSidebar();
+                };
+                friendsDiv.appendChild(btn);
+            });
+        }
+
+        window.switchTab = function(tabName) {
+            if (tabName === 'public') {
+                document.getElementById("tab-public-btn").className = "flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400";
+                document.getElementById("tab-chats-btn").className = "flex-1 py-3 text-center text-slate-400 hover:text-white";
+                openPublicChat();
+                if(window.innerWidth < 768) toggleSidebar();
+            } else {
+                document.getElementById("tab-chats-btn").className = "flex-1 py-3 text-center bg-slate-700/50 text-emerald-400 border-b-2 border-emerald-400";
+                document.getElementById("tab-public-btn").className = "flex-1 py-3 text-center text-slate-400 hover:text-white";
+                document.getElementById("chat-room-title").innerText = "Menu Teman";
+                document.getElementById("chat-room-status").innerText = "Pilih teman dari daftar samping.";
+                if(window.innerWidth < 768) toggleSidebar();
+            }
+        }
+
+        function openPublicChat() {
+            currentChatType = "public";
+            currentChatId = "public_room";
+            document.getElementById("chat-room-title").innerText = "🌐 Grup Publik";
+            document.getElementById("chat-room-status").innerText = "Semua pengguna bisa melihat pesan di sini.";
+            subscribeToMessages("public_messages");
+        }
+
+        window.openPrivateChat = function(friendName) {
+            currentChatType = "private";
+            const sortedNames = [myName, friendName].sort();
+            currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
+
+            document.getElementById("chat-room-title").innerText = "🔒 Private Chat: " + friendName;
+            document.getElementById("chat-room-status").innerText = "Obrolan privat dengan " + friendName;
+            subscribeToMessages(currentChatId);
+        }
+
+        function subscribeToMessages(collectionName) {
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const chatContainer = document.getElementById("chat-container");
+            const q = query(collection(db, collectionName), orderBy("createdAt", "asc"));
+
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                chatContainer.innerHTML = "";
+                if (snapshot.empty) {
+                    chatContainer.innerHTML = `<div class="m-auto text-center text-slate-500 text-xs">Belum ada pesan. Mulai obrolan sekarang!</div>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isMe = data.name === myName;
+                    
+                    let timeString = "";
+                    if (data.createdAt) {
+                        const date = data.createdAt.toDate();
+                        timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    const bubble = document.createElement("div");
+                    bubble.className = `flex flex-col max-w-[75%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
+                    
+                    bubble.innerHTML = `
+                        <span class="text-[10px] text-slate-400 mb-1 px-1 font-medium">${escapeHtml(data.name)}</span>
+                        <div class="p-3 rounded-2xl text-sm ${isMe ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-bl-none'} shadow-sm">
+                            <div class="break-words">${escapeHtml(data.text)}</div>
+                            <div class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'} text-right mt-1">${timeString}</div>
+                        </div>
+                    `;
+                    chatContainer.appendChild(bubble);
+                });
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+
+        window.sendMessage = async function(e) {
+            e.preventDefault();
+            const msgInput = document.getElementById("message-input");
+            const text = msgInput.value.trim();
+            if (!text) return;
+
+            if (!currentChatId || currentChatId === "public_room") {
+                try {
+                    await addDoc(collection(db, "public_messages"), {
+                        name: myName,
+                        text: text,
+                        createdAt: serverTimestamp()
+                    });
+                    msgInput.value = "";
+                } catch (error) {
+                    console.error("Gagal kirim:", error);
+                }
+            } else if (currentChatType === "private") {
+                try {
+                    await addDoc(collection(db, currentChatId), {
+                        name: myName,
+                        text: text,
+                        createdAt: serverTimestamp()
+                    });
+                    msgInput.value = "";
+                } catch (error) {
+                    console.error("Gagal kirim privat:", error);
+                }
+            } else {
+                alert("Silakan pilih teman atau Grup Publik terlebih dahulu!");
+            }
+        }
+
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("-translate-x-full");
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
