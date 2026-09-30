@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Native Mobile V26</title>
+    <title>Chatian - Ultimate Fixed V27</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,8 +13,6 @@
             color: #ffffff;
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100dvh; /* Mengikuti tinggi dinamis layar HP secara akurat */
             overflow: hidden;
         }
         .ios-bubble-me {
@@ -32,7 +30,7 @@
         }
     </style>
 </head>
-<body class="bg-black text-white flex flex-col w-full h-full overflow-hidden select-none">
+<body class="bg-black text-white select-none">
 
     <!-- Modal Login -->
     <div id="login-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-6">
@@ -64,11 +62,11 @@
         </div>
     </div>
 
-    <!-- CONTAINER UTAMA -->
-    <div class="w-full max-w-md mx-auto h-full flex flex-col bg-black relative overflow-hidden">
+    <!-- CONTAINER UTAMA (Dikunci menggunakan fixed inset-0 agar tidak bisa digeser/scroll bodinya) -->
+    <div class="fixed inset-0 w-full max-w-md mx-auto flex flex-col bg-black overflow-hidden">
         
         <!-- HALAMAN 1: SIDEBAR / DAFTAR CHAT -->
-        <div id="view-sidebar" class="flex flex-col flex-1 w-full bg-black h-full overflow-hidden">
+        <div id="view-sidebar" class="absolute inset-0 flex flex-col bg-black z-10 overflow-hidden">
             <div class="px-4 py-4 bg-[#1c1c1e] border-b border-white/10 flex justify-between items-center shrink-0">
                 <div>
                     <h1 class="text-lg font-bold text-white">Chatian</h1>
@@ -104,8 +102,8 @@
             </div>
         </div>
 
-        <!-- HALAMAN 2: RUANG CHAT (Fixed tinggi murni menggunakan flexbox aman mobile) -->
-        <div id="view-chat" class="hidden flex-col w-full h-full bg-black absolute inset-0 z-40">
+        <!-- HALAMAN 2: RUANG CHAT (Menggunakan absolute fixed top/bottom agar input footer tidak akan pernah tertelan/terpotong) -->
+        <div id="view-chat" class="hidden absolute inset-0 flex-col bg-black z-30 overflow-hidden">
             <!-- Header Chat -->
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
@@ -131,12 +129,12 @@
                 </div>
             </header>
 
-            <!-- Container Pesan (Bagian tengah yang bisa di-scroll) -->
+            <!-- Container Pesan (Area tengah yang bisa di-scroll secara independen) -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-black">
                 <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat pesan...</div>
             </div>
 
-            <!-- Footer / Kolom Ketik Pesan (Terkunci pas di bawah layar HP) -->
+            <!-- Footer / Kolom Ketik Pesan (Terkunci aman di bawah layar) -->
             <footer class="bg-[#1c1c1e] border-t border-white/10 p-3 shrink-0">
                 <form id="chat-form" onsubmit="sendMessage(event)" class="flex items-center gap-2">
                     <label class="cursor-pointer text-gray-400 hover:text-white p-1 text-lg">
@@ -152,10 +150,10 @@
                     <button type="button" onclick="cancelImage()" class="text-[11px] text-red-400 px-2">Hapus</button>
                 </div>
             </footer>
-        </main>
+        </div>
     </div>
 
-    <!-- Firebase & Logika V26 -->
+    <!-- Firebase & Logika V27 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -351,7 +349,7 @@
 
         window.revivePet = function() {
             if (currentChatType !== "private") return;
-            let streakKey = "room_streak_" + myName + "_" + chatRoomId;
+            let streakKey = "room_streak_" + myName + "_" + currentChatId;
             let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 1, "revives": 5}');
             if (streakData.revives > 0) {
                 streakData.revives -= 1;
@@ -432,7 +430,8 @@
             subscribeToMessages(currentChatId);
 
             document.getElementById("view-sidebar").style.display = "none";
-            document.getElementById("view-chat").style.display = "flex";
+            let chatView = document.getElementById("view-chat");
+            chatView.style.display = "flex";
         }
 
         window.openGroupChat = function(groupId, groupName) {
@@ -447,7 +446,8 @@
             subscribeToMessages(groupId);
 
             document.getElementById("view-sidebar").style.display = "none";
-            document.getElementById("view-chat").style.display = "flex";
+            let chatView = document.getElementById("view-chat");
+            chatView.style.display = "flex";
         }
 
         window.backToSidebar = function() {
