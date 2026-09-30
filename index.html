@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - WA Gestures V29</title>
+    <title>Chatian - Stable V30</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -28,7 +28,6 @@
         ::-webkit-scrollbar {
             display: none;
         }
-        /* Animasi geser swipe reply */
         .chat-bubble-wrapper {
             transition: transform 0.2s ease;
         }
@@ -66,10 +65,9 @@
         </div>
     </div>
 
-    <!-- Popup Menu Long Press (WhatsApp Action Sheet) -->
+    <!-- Popup Menu Long Press -->
     <div id="action-sheet" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end justify-center pb-8 p-4 backdrop-blur-sm" onclick="closeActionSheet()">
         <div class="bg-[#1c1c1e] w-full max-w-sm rounded-3xl p-4 border border-white/10 shadow-2xl space-y-4" onclick="event.stopPropagation()">
-            <!-- Pilihan Emoji Cepat -->
             <div class="flex justify-around bg-[#2c2c2e] py-2.5 px-3 rounded-2xl text-xl">
                 <button onclick="reactFromSheet('❤️')">❤️</button>
                 <button onclick="reactFromSheet('👍')">👍</button>
@@ -77,7 +75,6 @@
                 <button onclick="reactFromSheet('🔥')">🔥</button>
                 <button onclick="reactFromSheet('😮')">😮</button>
             </div>
-            <!-- Menu Aksi (Reply & Delete) -->
             <div class="space-y-1">
                 <button onclick="replyFromSheet()" class="w-full text-left px-4 py-3 rounded-xl text-xs text-white hover:bg-[#2c2c2e] flex items-center gap-3">
                     <span>↩️</span> Balas Pesan
@@ -161,7 +158,7 @@
                 <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat pesan...</div>
             </div>
 
-            <!-- Footer / Kolom Ketik Pesan dengan Kotak Reply Preview -->
+            <!-- Footer / Kolom Ketik Pesan -->
             <footer class="bg-[#1c1c1e] border-t border-white/10 p-3 shrink-0">
                 <div id="reply-preview-box" class="hidden mb-2 bg-[#2c2c2e] px-3 py-2 rounded-xl border-l-4 border-[#007AFF] flex justify-between items-center">
                     <div class="text-[11px] truncate">
@@ -188,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V29 -->
+    <!-- Firebase & Logika V30 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -215,7 +212,7 @@
         let unsubscribeMessages = null;
         let base64ImageString = "";
         let replyingToData = null;
-        let selectedMessageForAction = null; // Menyimpan data pesan yang sedang ditekan lama
+        let selectedMessageForAction = null;
 
         onAuthStateChanged(auth, async (user) => {
             const loginModal = document.getElementById("login-modal");
@@ -483,7 +480,7 @@
             document.getElementById("view-sidebar").style.display = "flex";
         }
 
-        // --- SISTEM RENDER PESAN & GESTUR WHATSAPP ---
+        // --- SISTEM RENDER PESAN YANG STABIL ---
 
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
@@ -533,44 +530,34 @@
                         ${reactionsHtml}
                     `;
 
-                    // --- IMPLEMENTASI GESTUR: SWIPE KANAN UNTUK REPLY & LONG PRESS UNTUK MENU ---
+                    // Gestur Swipe Kanan untuk Reply
                     let startX = 0;
-                    
-                    bubbleDiv.addEventListener('touchstart', (e) => {
-                        startX = e.touches[0].clientX;
-                    }, {passive: true});
-
+                    bubbleDiv.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive: true});
                     bubbleDiv.addEventListener('touchmove', (e) => {
                         let diffX = e.touches[0].clientX - startX;
-                        if (diffX > 0 && diffX < 80) { // Geser ke kanan maksimal 80px
-                            wrapper.style.transform = `translateX(${diffX}px)`;
-                        }
+                        if (diffX > 0 && diffX < 80) wrapper.style.transform = `translateX(${diffX}px)`;
                     }, {passive: true});
-
                     bubbleDiv.addEventListener('touchend', (e) => {
                         let diffX = e.changedTouches[0].clientX - startX;
                         wrapper.style.transform = `translateX(0px)`;
-                        if (diffX > 50) { // Jika digeser ke kanan lebih dari 50px, aktifkan reply
-                            triggerReply(docId, data.text || '[Gambar]', data.name);
-                        }
+                        if (diffX > 50) triggerReply(docId, data.text || '[Gambar]', data.name);
                     });
 
-                    // Timer untuk Long Press (Tekan Lama) memunculkan menu hapus & reaksi
+                    // Gestur Tekan Lama (Long Press) untuk Menu Aksi (Hapus & Emoji)
                     let pressTimer = null;
                     bubbleDiv.addEventListener('touchstart', () => {
                         pressTimer = setTimeout(() => {
                             openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
-                        }, 600); // 600 milidetik tekan lama
+                        }, 600);
                     });
                     bubbleDiv.addEventListener('touchmove', () => { clearTimeout(pressTimer); });
                     bubbleDiv.addEventListener('touchend', () => { clearTimeout(pressTimer); });
-                    // Untuk dukungan klik mouse di komputer/laptop
                     bubbleDiv.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
                     });
 
-                    wrapper.appendChild(senderNameHtml);
+                    if (senderNameHtml) wrapper.appendChild(senderNameHtml);
                     wrapper.appendChild(bubbleDiv);
 
                     const timeSpan = document.createElement("span");
@@ -584,19 +571,11 @@
             });
         }
 
-        // --- FUNGSI MENU AKSI (REPLY, EMOJI, HAPUS) ---
-
         function openActionSheet(msgId, senderName, msgText, isMe) {
             selectedMessageForAction = { id: msgId, sender: senderName, text: msgText };
             const deleteBtn = document.getElementById("btn-delete-msg");
-            
-            // Tombol hapus hanya muncul jika pesan tersebut milik kita sendiri
-            if (isMe) {
-                deleteBtn.classList.remove("hidden");
-            } else {
-                deleteBtn.classList.add("hidden");
-            }
-
+            if (isMe) deleteBtn.classList.remove("hidden");
+            else deleteBtn.classList.add("hidden");
             document.getElementById("action-sheet").classList.remove("hidden");
         }
 
@@ -617,7 +596,6 @@
                 closeActionSheet();
                 return;
             }
-
             try {
                 const msgRef = doc(db, currentChatId, selectedMessageForAction.id);
                 await updateDoc(msgRef, {
