@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="ZTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - iOS Google Popup V16</title>
+    <title>Chatian - WhatsApp & TikTok Style V17</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -33,10 +33,10 @@
 </head>
 <body class="h-screen flex flex-col text-slate-100 overflow-hidden select-none">
 
-    <!-- Modal Login dengan Google -->
-    <div id="login-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
+    <!-- Modal Login dengan Google (Hanya muncul jika belum login) -->
+    <div id="login-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-6 hidden">
         <div class="bg-[#1c1c1e] p-8 rounded-3xl w-full max-w-xs shadow-2xl border border-white/10 text-center">
-            <div class="text-5xl mb-3">🔥</div>
+            <div class="text-5xl mb-3">💬</div>
             <h2 class="text-xl font-bold mb-1 text-white">Chatian</h2>
             <p class="text-xs text-gray-400 mb-6">Masuk menggunakan akun Google Anda untuk mulai mengobrol.</p>
             
@@ -87,15 +87,20 @@
                 <button onclick="logoutUser()" class="text-xs text-red-400 font-medium bg-red-500/10 px-3 py-1.5 rounded-full">Keluar</button>
             </div>
 
-            <div class="p-3 bg-[#000000]">
+            <!-- Tab Menu & Tombol Buat Grup -->
+            <div class="p-3 bg-[#000000] space-y-2">
                 <div class="bg-[#1c1c1e] p-1 rounded-xl flex text-xs font-semibold">
                     <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition">Teman</button>
-                    <button onclick="switchTab('public')" id="tab-public-btn" class="flex-1 py-1.5 text-center rounded-lg text-gray-400 transition">Publik</button>
+                    <button onclick="switchTab('groups')" id="tab-groups-btn" class="flex-1 py-1.5 text-center rounded-lg text-gray-400 transition">Grup</button>
                 </div>
+                <button onclick="openCreateGroupModal()" class="w-full bg-[#2c2c2e] hover:bg-[#3a3a3c] text-[#007AFF] font-semibold py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                    ➕ Buat Grup Baru
+                </button>
             </div>
 
             <div class="flex-1 overflow-y-auto px-4 space-y-4 pb-6">
-                <div>
+                <!-- Bagian Cari Teman -->
+                <div id="section-search">
                     <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Tambah Teman</div>
                     <div class="flex gap-2">
                         <input type="text" id="search-friend-input" placeholder="Cari username..." class="flex-1 bg-[#1c1c1e] border border-transparent focus:border-[#007AFF] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
@@ -104,10 +109,11 @@
                     <div id="search-result-container" class="mt-2"></div>
                 </div>
 
+                <!-- Daftar Chat / Grup -->
                 <div>
-                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Daftar Percakapan</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2" id="list-title">Daftar Percakapan</div>
                     <div id="friends-list" class="space-y-1">
-                        <div class="text-xs text-gray-500 italic px-2 py-3">Belum ada teman.</div>
+                        <div class="text-xs text-gray-500 italic px-2 py-3">Belum ada obrolan.</div>
                     </div>
                 </div>
             </div>
@@ -119,12 +125,11 @@
                 <div class="flex items-center gap-2">
                     <button onclick="toggleSidebar()" class="md:hidden text-[#007AFF] text-sm font-semibold flex items-center gap-1">‹ Menu</button>
                     
-                    <!-- Header Title dengan gaya Streak ala TikTok di sebelah username -->
                     <div class="flex items-center gap-2">
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5">
-                                <h2 class="font-bold text-sm text-white tracking-tight" id="chat-room-title">Grup Publik</h2>
-                                <!-- Badge Streak Ala TikTok (Muncul otomatis di Private Chat) -->
+                                <h2 class="font-bold text-sm text-white tracking-tight" id="chat-room-title">Pilih Chat</h2>
+                                <!-- Badge Streak ala TikTok (Hanya di Private Chat) -->
                                 <span id="tiktok-streak-badge" class="hidden items-center gap-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-orange-500/30 px-2 py-0.5 rounded-full text-[11px] font-bold text-orange-400">
                                     🔥 <span id="streak-number">0</span>
                                 </span>
@@ -145,7 +150,7 @@
             </header>
 
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-[#000000]">
-                <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat chat...</div>
+                <div class="m-auto text-center text-gray-600 text-xs p-4">Pilih teman atau grup untuk mulai mengobrol.</div>
             </div>
 
             <footer class="bg-[#161617] border-t border-white/10 p-2.5">
@@ -168,7 +173,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V16 -->
+    <!-- Firebase & Logika V17 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -189,15 +194,22 @@
         const provider = new GoogleAuthProvider();
 
         let myName = "";
-        let currentChatId = "public_room";
-        let currentChatType = "public";
+        let currentChatId = "";
+        let currentChatType = "private";
+        let currentTab = "chats";
         let unsubscribeMessages = null;
         let base64ImageString = "";
+
+        // Minta izin Browser Notification untuk notifikasi ala WhatsApp
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
                 
+                // Sembunyikan modal login karena sudah masuk
                 document.getElementById("login-modal").style.display = "none";
                 document.getElementById("my-profile-name").innerText = "@" + myName;
 
@@ -207,9 +219,9 @@
                     lastActive: serverTimestamp()
                 }, { merge: true });
 
-                loadMyFriendsList();
-                openPublicChat();
+                loadListContent();
             } else {
+                // Tampilkan modal login hanya jika belum login
                 document.getElementById("login-modal").style.display = "flex";
             }
         });
@@ -219,7 +231,7 @@
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error(error);
-                document.getElementById("login-error").innerText = "Gagal login dengan Google. Pastikan Pop-up tidak diblokir.";
+                document.getElementById("login-error").innerText = "Gagal login dengan Google.";
                 document.getElementById("login-error").classList.remove("hidden");
             }
         }
@@ -229,8 +241,79 @@
             location.reload();
         }
 
+        // --- MANAJEMEN TAB (TEMAN / GRUP) ---
+        window.switchTab = function(tabName) {
+            currentTab = tabName;
+            if (tabName === 'chats') {
+                document.getElementById("tab-chats-btn").className = "flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition";
+                document.getElementById("tab-groups-btn").className = "flex-1 py-1.5 text-center rounded-lg text-gray-400 transition";
+                document.getElementById("section-search").style.display = "block";
+                document.getElementById("list-title").innerText = "Daftar Percakapan";
+            } else {
+                document.getElementById("tab-groups-btn").className = "flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition";
+                document.getElementById("tab-chats-btn").className = "flex-1 py-1.5 text-center rounded-lg text-gray-400 transition";
+                document.getElementById("section-search").style.display = "none";
+                document.getElementById("list-title").innerText = "Daftar Grup WhatsApp Style";
+            }
+            loadListContent();
+        }
+
+        function loadListContent() {
+            if (currentTab === 'chats') {
+                loadMyFriendsList();
+            } else {
+                loadMyGroupsList();
+            }
+        }
+
+        // --- BUAT GRUP ---
+        window.openCreateGroupModal = async function() {
+            const groupName = prompt("Masukkan Nama Grup baru:");
+            if (!groupName || !groupName.trim()) return;
+
+            const cleanGroupName = groupName.trim().replace(/\s+/g, "_");
+            const groupDocId = "group_" + cleanGroupName;
+
+            try {
+                await setDoc(doc(db, "groups", groupDocId), {
+                    name: groupName.trim(),
+                    createdBy: myName,
+                    createdAt: serverTimestamp()
+                });
+
+                let myGroups = JSON.parse(localStorage.getItem("my_groups_" + myName) || "[]");
+                if (!myGroups.includes(groupDocId)) {
+                    myGroups.push(groupDocId);
+                    localStorage.setItem("my_groups_" + myName, JSON.stringify(myGroups));
+                }
+                switchTab('groups');
+                alert("Grup berhasil dibuat!");
+            } catch (e) {
+                alert("Gagal membuat grup.");
+            }
+        }
+
+        function loadMyGroupsList() {
+            const listDiv = document.getElementById("friends-list");
+            let myGroups = JSON.parse(localStorage.getItem("my_groups_" + myName) || "[]");
+            listDiv.innerHTML = "";
+            if (myGroups.length === 0) {
+                listDiv.innerHTML = `<div class="text-xs text-gray-500 italic px-2 py-3">Belum ada grup. Buat grup baru di atas!</div>`;
+                return;
+            }
+            myGroups.forEach((gId) => {
+                let gName = gId.replace("group_", "").replace(/_/g, " ");
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left px-3 py-2.5 rounded-xl bg-[#1c1c1e] hover:bg-[#2c2c2e] text-xs flex justify-between items-center transition mb-1";
+                btn.innerHTML = `<span class="font-semibold text-white">👥 ${escapeHtml(gName)}</span> <span class="text-[10px] text-[#007AFF] font-medium">Buka ›</span>`;
+                btn.onclick = () => { openGroupChat(gId, gName); };
+                listDiv.appendChild(btn);
+            });
+        }
+
+        // --- STREAK PET & ROOM ---
         function checkAndUpdateRoomStreak(chatRoomId) {
-            if (!chatRoomId || chatRoomId === "public_room") return;
+            if (!chatRoomId || currentChatType !== "private") return;
 
             let streakKey = "room_streak_" + myName + "_" + chatRoomId;
             let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 0, "lastDate": "", "revives": 5, "lastMonth": ""}');
@@ -267,6 +350,7 @@
         }
 
         function updateRoomPetUI(chatRoomId) {
+            if (currentChatType !== "private") return;
             let streakKey = "room_streak_" + myName + "_" + chatRoomId;
             let petKey = "room_pet_" + myName + "_" + chatRoomId;
 
@@ -274,8 +358,6 @@
             let petData = JSON.parse(localStorage.getItem(petKey) || '{"name": "Mochi", "icon": "🐶"}');
 
             document.getElementById("dropdown-pet-info").innerText = `${petData.icon} ${petData.name} (🔥 Lv.${streakData.streak})`;
-            
-            // Update tampilan badge streak ala TikTok di header
             document.getElementById("streak-number").innerText = streakData.streak;
             document.getElementById("tiktok-streak-badge").classList.remove("hidden");
             document.getElementById("tiktok-streak-badge").classList.add("flex");
@@ -325,6 +407,7 @@
             document.getElementById("dropdown-menu").classList.toggle("hidden");
         }
 
+        // --- PENCARIAN TEMAN ---
         window.searchAndAddUser = async function() {
             const queryName = document.getElementById("search-friend-input").value.trim();
             const resultDiv = document.getElementById("search-result-container");
@@ -374,31 +457,6 @@
             });
         }
 
-        window.switchTab = function(tabName) {
-            if (tabName === 'public') {
-                document.getElementById("tab-public-btn").className = "flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition";
-                document.getElementById("tab-chats-btn").className = "flex-1 py-1.5 text-center rounded-lg text-gray-400 transition";
-                openPublicChat();
-            } else {
-                document.getElementById("tab-chats-btn").className = "flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition";
-                document.getElementById("tab-public-btn").className = "flex-1 py-1.5 text-center rounded-lg text-gray-400 transition";
-                document.getElementById("room-settings-container").classList.add("hidden");
-                document.getElementById("tiktok-streak-badge").classList.add("hidden");
-            }
-            if(window.innerWidth < 768) toggleSidebar();
-        }
-
-        function openPublicChat() {
-            currentChatType = "public";
-            currentChatId = "public_room";
-            document.getElementById("chat-room-title").innerText = "Grup Publik";
-            document.getElementById("chat-room-status").innerText = "Online room";
-            document.getElementById("room-settings-container").classList.add("hidden");
-            document.getElementById("tiktok-streak-badge").classList.add("hidden");
-            subscribeToMessages("public_messages");
-            if(window.innerWidth < 768) toggleSidebar();
-        }
-
         window.openPrivateChat = function(friendName) {
             currentChatType = "private";
             const sortedNames = [myName, friendName].sort();
@@ -418,15 +476,36 @@
             }
         }
 
+        window.openGroupChat = function(groupId, groupName) {
+            currentChatType = "group";
+            currentChatId = groupId;
+
+            document.getElementById("chat-room-title").innerText = "👥 " + groupName;
+            document.getElementById("chat-room-status").innerText = "Grup WhatsApp Style";
+            document.getElementById("room-settings-container").classList.add("hidden");
+            document.getElementById("tiktok-streak-badge").classList.add("hidden");
+
+            subscribeToMessages(groupId);
+
+            if(window.innerWidth < 768) {
+                document.getElementById("sidebar").classList.add("-translate-x-full");
+                document.getElementById("chat-main-view").classList.remove("translate-x-full");
+            }
+        }
+
+        // --- REALTIME MESSAGES & NOTIFIKASI ALA WA ---
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
             const chatContainer = document.getElementById("chat-container");
             const q = query(collection(db, collectionName), orderBy("createdAt", "asc"));
 
+            let isFirstLoad = true;
+
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 chatContainer.innerHTML = "";
                 if (snapshot.empty) {
                     chatContainer.innerHTML = `<div class="m-auto text-center text-gray-600 text-xs">Mulai percakapan sekarang...</div>`;
+                    isFirstLoad = false;
                     return;
                 }
 
@@ -438,7 +517,11 @@
 
                     const bubble = document.createElement("div");
                     bubble.className = `flex flex-col max-w-[80%] my-1 ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
+                    
+                    let senderNameHtml = (currentChatType === "group" && !isMe) ? `<span class="text-[9px] text-gray-400 mb-0.5 px-1">${escapeHtml(data.name)}</span>` : "";
+
                     bubble.innerHTML = `
+                        ${senderNameHtml}
                         <div class="px-3.5 py-2.5 text-xs ${isMe ? 'ios-bubble-me' : 'ios-bubble-other'} shadow-sm">
                             ${data.text ? `<div class="break-words">${escapeHtml(data.text)}</div>` : ''}
                             ${imageHtml}
@@ -447,8 +530,32 @@
                     `;
                     chatContainer.appendChild(bubble);
                 });
+
+                // Cek pesan baru masuk dari orang lain untuk memunculkan notifikasi WhatsApp style
+                if (!isFirstLoad) {
+                    const changes = snapshot.docChanges();
+                    changes.forEach((change) => {
+                        if (change.type === "added") {
+                            const newMsg = change.doc.data();
+                            if (newMsg.name !== myName) {
+                                triggerWhatsAppNotification(newMsg.name, newMsg.text || "[Mengirim Foto]");
+                            }
+                        }
+                    });
+                }
+
+                isFirstLoad = false;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
+        }
+
+        function triggerWhatsAppNotification(sender, messageText) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(`Pesan baru dari @${sender}`, {
+                    body: messageText,
+                    icon: "https://cdn-icons-png.flaticon.com/512/733/733585.png"
+                });
+            }
         }
 
         window.previewImage = function(event) {
@@ -478,6 +585,10 @@
             const msgInput = document.getElementById("message-input");
             const text = msgInput.value.trim();
             if (!text && !base64ImageString) return;
+            if (!currentChatId) {
+                alert("Pilih chat atau grup terlebih dahulu!");
+                return;
+            }
 
             const messageData = {
                 name: myName,
@@ -486,9 +597,8 @@
                 createdAt: serverTimestamp()
             };
 
-            const targetCol = currentChatType === "public" ? "public_messages" : currentChatId;
             try {
-                await addDoc(collection(db, targetCol), messageData);
+                await addDoc(collection(db, currentChatId), messageData);
                 msgInput.value = "";
                 cancelImage();
 
@@ -496,7 +606,7 @@
                     checkAndUpdateRoomStreak(currentChatId);
                 }
             } catch (error) {
-                alert("Gagal mengirim.");
+                alert("Gagal mengirim pesan.");
             }
         }
 
