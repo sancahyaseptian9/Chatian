@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - WA Features V28</title>
+    <title>Chatian - WA Gestures V29</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -27,6 +27,10 @@
         }
         ::-webkit-scrollbar {
             display: none;
+        }
+        /* Animasi geser swipe reply */
+        .chat-bubble-wrapper {
+            transition: transform 0.2s ease;
         }
     </style>
 </head>
@@ -59,6 +63,29 @@
             <input type="text" id="pet-name-input" placeholder="Nama Pet..." class="w-full bg-[#2c2c2e] rounded-xl px-3 py-2.5 mb-5 text-white text-xs">
             <button onclick="saveCustomPet()" class="w-full bg-[#007AFF] text-white py-3 rounded-xl text-xs mb-2">Simpan</button>
             <button onclick="togglePetModal(false)" class="w-full bg-[#2c2c2e] text-gray-300 py-3 rounded-xl text-xs">Batal</button>
+        </div>
+    </div>
+
+    <!-- Popup Menu Long Press (WhatsApp Action Sheet) -->
+    <div id="action-sheet" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end justify-center pb-8 p-4 backdrop-blur-sm" onclick="closeActionSheet()">
+        <div class="bg-[#1c1c1e] w-full max-w-sm rounded-3xl p-4 border border-white/10 shadow-2xl space-y-4" onclick="event.stopPropagation()">
+            <!-- Pilihan Emoji Cepat -->
+            <div class="flex justify-around bg-[#2c2c2e] py-2.5 px-3 rounded-2xl text-xl">
+                <button onclick="reactFromSheet('❤️')">❤️</button>
+                <button onclick="reactFromSheet('👍')">👍</button>
+                <button onclick="reactFromSheet('😂')">😂</button>
+                <button onclick="reactFromSheet('🔥')">🔥</button>
+                <button onclick="reactFromSheet('😮')">😮</button>
+            </div>
+            <!-- Menu Aksi (Reply & Delete) -->
+            <div class="space-y-1">
+                <button onclick="replyFromSheet()" class="w-full text-left px-4 py-3 rounded-xl text-xs text-white hover:bg-[#2c2c2e] flex items-center gap-3">
+                    <span>↩️</span> Balas Pesan
+                </button>
+                <button id="btn-delete-msg" onclick="deleteFromSheet()" class="w-full text-left px-4 py-3 rounded-xl text-xs text-red-400 hover:bg-[#2c2c2e] flex items-center gap-3 hidden">
+                    <span>🗑️</span> Hapus Pesan untuk Semua Orang
+                </button>
+            </div>
         </div>
     </div>
 
@@ -136,7 +163,6 @@
 
             <!-- Footer / Kolom Ketik Pesan dengan Kotak Reply Preview -->
             <footer class="bg-[#1c1c1e] border-t border-white/10 p-3 shrink-0">
-                <!-- Kotak Pratinjau Balasan (Muncul saat mereply) -->
                 <div id="reply-preview-box" class="hidden mb-2 bg-[#2c2c2e] px-3 py-2 rounded-xl border-l-4 border-[#007AFF] flex justify-between items-center">
                     <div class="text-[11px] truncate">
                         <div class="font-bold text-[#007AFF]" id="reply-preview-sender">Membalas...</div>
@@ -162,11 +188,11 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V28 -->
+    <!-- Firebase & Logika V29 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCu6XJmJD4MHBFPfwohvy8ZkouoonN3uPw",
@@ -188,7 +214,8 @@
         let currentTab = "chats";
         let unsubscribeMessages = null;
         let base64ImageString = "";
-        let replyingToData = null; // Menyimpan data pesan yang sedang direply
+        let replyingToData = null;
+        let selectedMessageForAction = null; // Menyimpan data pesan yang sedang ditekan lama
 
         onAuthStateChanged(auth, async (user) => {
             const loginModal = document.getElementById("login-modal");
@@ -213,7 +240,6 @@
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                console.error(error);
                 document.getElementById("login-error").innerText = "Gagal login. Pastikan pop-up diizinkan.";
                 document.getElementById("login-error").classList.remove("hidden");
             }
@@ -457,7 +483,7 @@
             document.getElementById("view-sidebar").style.display = "flex";
         }
 
-        // --- FITUR WHATSAPP: REPLY, DELETE, & REACTIONS ---
+        // --- SISTEM RENDER PESAN & GESTUR WHATSAPP ---
 
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
@@ -478,7 +504,6 @@
                     let timeString = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
                     let imageHtml = data.image ? `<img src="${data.image}" class="mt-2 rounded-xl max-h-48 object-cover cursor-pointer" onclick="window.open('${data.image}')">` : "";
 
-                    // Render balasan jika ada
                     let replyHtml = "";
                     if (data.replyTo) {
                         replyHtml = `
@@ -489,75 +514,112 @@
                         `;
                     }
 
-                    // Render reaksi emoji
                     let reactionsHtml = "";
                     if (data.reactions && Object.keys(data.reactions).length > 0) {
                         let emojiList = Object.values(data.reactions).join(" ");
                         reactionsHtml = `<div class="absolute -bottom-2 ${isMe ? 'left-2' : 'right-2'} bg-[#1c1c1e] border border-white/10 px-1.5 py-0.5 rounded-full text-[10px] shadow">${emojiList}</div>`;
                     }
 
-                    const bubble = document.createElement("div");
-                    bubble.className = `flex flex-col max-w-[80%] my-2 relative ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
+                    const wrapper = document.createElement("div");
+                    wrapper.className = `flex flex-col max-w-[80%] my-2 relative chat-bubble-wrapper ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
                     let senderNameHtml = (currentChatType === "group" && !isMe) ? `<span class="text-[9px] text-gray-400 mb-0.5 px-1">${escapeHtml(data.name)}</span>` : "";
 
-                    bubble.innerHTML = `
-                        ${senderNameHtml}
-                        <div class="px-3.5 py-2.5 text-xs ${isMe ? 'ios-bubble-me' : 'ios-bubble-other'} shadow-sm relative group cursor-pointer" onclick="openMessageActions('${docId}', '${escapeHtml(data.text || '[Gambar]')}', '${escapeHtml(data.name)}')">
-                            ${replyHtml}
-                            ${data.text ? `<div class="break-words">${escapeHtml(data.text)}</div>` : ''}
-                            ${imageHtml}
-                            ${reactionsHtml}
-                        </div>
-                        <span class="text-[9px] text-gray-500 mt-0.5 px-1">${timeString}</span>
+                    const bubbleDiv = document.createElement("div");
+                    bubbleDiv.className = `px-3.5 py-2.5 text-xs ${isMe ? 'ios-bubble-me' : 'ios-bubble-other'} shadow-sm relative`;
+                    bubbleDiv.innerHTML = `
+                        ${replyHtml}
+                        ${data.text ? `<div class="break-words">${escapeHtml(data.text)}</div>` : ''}
+                        ${imageHtml}
+                        ${reactionsHtml}
                     `;
-                    chatContainer.appendChild(bubble);
+
+                    // --- IMPLEMENTASI GESTUR: SWIPE KANAN UNTUK REPLY & LONG PRESS UNTUK MENU ---
+                    let startX = 0;
+                    
+                    bubbleDiv.addEventListener('touchstart', (e) => {
+                        startX = e.touches[0].clientX;
+                    }, {passive: true});
+
+                    bubbleDiv.addEventListener('touchmove', (e) => {
+                        let diffX = e.touches[0].clientX - startX;
+                        if (diffX > 0 && diffX < 80) { // Geser ke kanan maksimal 80px
+                            wrapper.style.transform = `translateX(${diffX}px)`;
+                        }
+                    }, {passive: true});
+
+                    bubbleDiv.addEventListener('touchend', (e) => {
+                        let diffX = e.changedTouches[0].clientX - startX;
+                        wrapper.style.transform = `translateX(0px)`;
+                        if (diffX > 50) { // Jika digeser ke kanan lebih dari 50px, aktifkan reply
+                            triggerReply(docId, data.text || '[Gambar]', data.name);
+                        }
+                    });
+
+                    // Timer untuk Long Press (Tekan Lama) memunculkan menu hapus & reaksi
+                    let pressTimer = null;
+                    bubbleDiv.addEventListener('touchstart', () => {
+                        pressTimer = setTimeout(() => {
+                            openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
+                        }, 600); // 600 milidetik tekan lama
+                    });
+                    bubbleDiv.addEventListener('touchmove', () => { clearTimeout(pressTimer); });
+                    bubbleDiv.addEventListener('touchend', () => { clearTimeout(pressTimer); });
+                    // Untuk dukungan klik mouse di komputer/laptop
+                    bubbleDiv.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
+                    });
+
+                    wrapper.appendChild(senderNameHtml);
+                    wrapper.appendChild(bubbleDiv);
+
+                    const timeSpan = document.createElement("span");
+                    timeSpan.className = "text-[9px] text-gray-500 mt-0.5 px-1";
+                    timeSpan.innerText = timeString;
+                    wrapper.appendChild(timeSpan);
+
+                    chatContainer.appendChild(wrapper);
                 });
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             });
         }
 
-        // Menu Interaksi Pesan (Reply, Reaksi Emoji, Hapus)
-        window.openMessageActions = function(msgId, msgText, msgSender) {
-            let action = prompt(`Pilih Aksi WhatsApp:\n1. Balas (Ketik 'reply')\n2. Reaksi Emoji (Ketik '❤️', '😂', '👍', '🔥')\n3. Hapus Pesan (Ketik 'hapus')`);
-            if (!action) return;
+        // --- FUNGSI MENU AKSI (REPLY, EMOJI, HAPUS) ---
 
-            action = action.trim();
-            if (action.toLowerCase() === 'reply') {
-                replyingToData = { id: msgId, sender: msgSender, text: msgText };
-                document.getElementById("reply-preview-sender").innerText = "Membalas " + msgSender;
-                document.getElementById("reply-preview-text").innerText = msgText;
-                document.getElementById("reply-preview-box").classList.remove("hidden");
-                document.getElementById("message-input").focus();
-            } else if (['❤️', '😂', '👍', '🔥', '😮', '😢'].includes(action)) {
-                addEmojiReaction(msgId, action);
-            } else if (action.toLowerCase() === 'hapus') {
-                deleteMessage(msgId);
+        function openActionSheet(msgId, senderName, msgText, isMe) {
+            selectedMessageForAction = { id: msgId, sender: senderName, text: msgText };
+            const deleteBtn = document.getElementById("btn-delete-msg");
+            
+            // Tombol hapus hanya muncul jika pesan tersebut milik kita sendiri
+            if (isMe) {
+                deleteBtn.classList.remove("hidden");
+            } else {
+                deleteBtn.classList.add("hidden");
             }
+
+            document.getElementById("action-sheet").classList.remove("hidden");
         }
 
-        window.cancelReply = function() {
-            replyingToData = null;
-            document.getElementById("reply-preview-box").classList.add("hidden");
+        window.closeActionSheet = function() {
+            document.getElementById("action-sheet").classList.add("hidden");
+            selectedMessageForAction = null;
         }
 
-        async function addEmojiReaction(msgId, emoji) {
-            try {
-                const msgRef = doc(db, currentChatId, msgId);
-                const msgSnap = await getDoc(msgRef);
-                if (msgSnap.exists()) {
-                    let reactions = msgSnap.data().reactions || {};
-                    reactions[myName] = emoji; // Setiap user bisa kasih 1 emoji per pesan
-                    await updateDoc(msgRef, { reactions: reactions });
-                }
-            } catch (e) {
-                alert("Gagal memberi reaksi.");
+        window.replyFromSheet = function() {
+            if (!selectedMessageForAction) return;
+            triggerReply(selectedMessageForAction.id, selectedMessageForAction.text, selectedMessageForAction.sender);
+            closeActionSheet();
+        }
+
+        window.deleteFromSheet = async function() {
+            if (!selectedMessageForAction) return;
+            if (!confirm("Hapus pesan ini untuk semua orang?")) {
+                closeActionSheet();
+                return;
             }
-        }
 
-        async function deleteMessage(msgId) {
-            if (!confirm("Hapus pesan ini untuk semua orang?")) return;
             try {
-                const msgRef = doc(db, currentChatId, msgId);
+                const msgRef = doc(db, currentChatId, selectedMessageForAction.id);
                 await updateDoc(msgRef, {
                     text: "🚫 Pesan ini telah dihapus",
                     image: "",
@@ -566,6 +628,36 @@
             } catch (e) {
                 alert("Gagal menghapus pesan.");
             }
+            closeActionSheet();
+        }
+
+        window.reactFromSheet = async function(emoji) {
+            if (!selectedMessageForAction) return;
+            try {
+                const msgRef = doc(db, currentChatId, selectedMessageForAction.id);
+                const msgSnap = await getDoc(msgRef);
+                if (msgSnap.exists()) {
+                    let reactions = msgSnap.data().reactions || {};
+                    reactions[myName] = emoji;
+                    await updateDoc(msgRef, { reactions: reactions });
+                }
+            } catch (e) {
+                alert("Gagal memberi reaksi.");
+            }
+            closeActionSheet();
+        }
+
+        function triggerReply(msgId, text, sender) {
+            replyingToData = { id: msgId, sender: sender, text: text };
+            document.getElementById("reply-preview-sender").innerText = "Membalas " + sender;
+            document.getElementById("reply-preview-text").innerText = text;
+            document.getElementById("reply-preview-box").classList.remove("hidden");
+            document.getElementById("message-input").focus();
+        }
+
+        window.cancelReply = function() {
+            replyingToData = null;
+            document.getElementById("reply-preview-box").classList.add("hidden");
         }
 
         window.previewImage = function(event) {
