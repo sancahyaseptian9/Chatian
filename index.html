@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatAnyuk - iOS Style V12</title>
+    <title>ChatAnyuk - iOS Google Auth V13</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom iOS style tweaks */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #000000;
@@ -27,7 +26,6 @@
             color: #f1f1f1;
             border-radius: 20px 20px 20px 4px;
         }
-        /* Hide scrollbar for clean UI */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -35,25 +33,28 @@
 </head>
 <body class="h-screen flex flex-col text-slate-100 overflow-hidden select-none">
 
-    <!-- Modal Login / Nama Pengguna (iOS Style Alert) -->
-    <div id="login-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-6">
-        <div class="bg-[#1c1c1e] p-6 rounded-3xl w-full max-w-xs shadow-2xl border border-white/10 text-center">
-            <div class="text-4xl mb-3">💬</div>
-            <h2 class="text-lg font-bold mb-1 text-white">ChatAnyuk iOS</h2>
-            <p class="text-xs text-gray-400 mb-4">Masukkan username unik Anda untuk mulai masuk.</p>
-            <input type="text" id="username-input" placeholder="Username..." class="w-full bg-[#2c2c2e] border border-transparent focus:border-[#007AFF] rounded-xl px-4 py-3 mb-2 text-sm text-white focus:outline-none text-center">
-            <p id="login-error" class="text-[11px] text-red-400 mb-3 hidden"></p>
-            <button onclick="loginUser()" class="w-full bg-[#007AFF] hover:bg-[#0062cc] text-white font-semibold py-3 rounded-xl transition text-sm">Masuk</button>
+    <!-- Modal Login dengan Google -->
+    <div id="login-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
+        <div class="bg-[#1c1c1e] p-8 rounded-3xl w-full max-w-xs shadow-2xl border border-white/10 text-center">
+            <div class="text-5xl mb-3">💬</div>
+            <h2 class="text-xl font-bold mb-1 text-white">ChatAnyuk</h2>
+            <p class="text-xs text-gray-400 mb-6">Masuk menggunakan akun Google Anda untuk mulai mengobrol.</p>
+            
+            <button onclick="loginWithGoogle()" class="w-full bg-white hover:bg-gray-100 text-black font-semibold py-3 px-4 rounded-2xl transition text-xs flex items-center justify-center gap-2 shadow-lg">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.19v3.15C3.17 21.32 7.23 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.6H1.19C.43 8.13 0 9.87 0 12s.43 3.87 1.19 5.4l4.08-3.16z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.23 0 3.17 2.68 1.19 6.6l4.08 3.15c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>
+                <span>Masuk dengan Google</span>
+            </button>
+            <p id="login-error" class="text-[11px] text-red-400 mt-3 hidden"></p>
         </div>
     </div>
 
-    <!-- Modal Custom Pet (iOS Action Sheet style) -->
-    <div id="pet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-4 hidden">
-        <div class="bg-[#1c1c1e] p-6 rounded-t-3xl md:rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl">
+    <!-- Modal Custom Pet -->
+    <div id="pet-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-[#1c1c1e] p-6 rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl">
             <h2 class="text-base font-bold mb-1 text-white text-center">🐾 Pet Settings</h2>
             <p class="text-xs text-gray-400 mb-4 text-center">Kustomisasi peliharaan di ruang chat ini.</p>
             
-            <label class="text-[11px] text-gray-400 block mb-1 uppercase font-semibold tracking-wider">Pilih Jenis Pet</label>
+            <label class="text-[11px] text-gray-400 block mb-1 uppercase font-semibold">Pilih Jenis Pet</label>
             <select id="pet-type-select" class="w-full bg-[#2c2c2e] border border-transparent rounded-xl px-3 py-2.5 mb-3 text-white text-xs focus:outline-none focus:border-[#007AFF]">
                 <option value="🐶">🐶 Anjing (Dog)</option>
                 <option value="🐱">🐱 Kucing (Cat)</option>
@@ -63,31 +64,29 @@
                 <option value="🐼">🐼 Panda (Panda)</option>
             </select>
 
-            <label class="text-[11px] text-gray-400 block mb-1 uppercase font-semibold tracking-wider">Nama Pet</label>
+            <label class="text-[11px] text-gray-400 block mb-1 uppercase font-semibold">Nama Pet</label>
             <input type="text" id="pet-name-input" placeholder="Nama Pet..." class="w-full bg-[#2c2c2e] border border-transparent rounded-xl px-3 py-2.5 mb-5 text-white text-xs focus:outline-none focus:border-[#007AFF]">
             
             <div class="flex flex-col gap-2">
-                <button onclick="saveCustomPet()" class="w-full bg-[#007AFF] text-white font-semibold py-3 rounded-xl text-xs transition">Simpan Perubahan</button>
-                <button onclick="togglePetModal(false)" class="w-full bg-[#2c2c2e] text-gray-300 font-semibold py-3 rounded-xl text-xs transition">Batal</button>
+                <button onclick="saveCustomPet()" class="w-full bg-[#007AFF] text-white font-semibold py-3 rounded-xl text-xs">Simpan</button>
+                <button onclick="togglePetModal(false)" class="w-full bg-[#2c2c2e] text-gray-300 font-semibold py-3 rounded-xl text-xs">Batal</button>
             </div>
         </div>
     </div>
 
-    <!-- Layout Utama iPhone Container -->
+    <!-- Layout Utama -->
     <div class="flex flex-1 overflow-hidden relative max-w-md mx-auto w-full bg-[#000000] border-x border-white/10">
         
-        <!-- SIDEBAR / MENU UTAMA (iOS Navigation View Style) -->
+        <!-- SIDEBAR -->
         <aside id="sidebar" class="w-full bg-[#000000] flex flex-col absolute inset-0 z-30 transition-transform duration-300 transform -translate-x-full md:translate-x-0 md:relative md:w-85 md:border-r md:border-white/10">
-            <!-- Header Sidebar -->
             <div class="px-4 pt-12 pb-3 glass-header border-b border-white/10 flex justify-between items-center">
                 <div>
                     <h1 class="text-xl font-bold text-white tracking-tight">Messages</h1>
-                    <p class="text-xs text-gray-400" id="my-profile-name">@username</p>
+                    <p class="text-xs text-gray-400" id="my-profile-name">@user</p>
                 </div>
                 <button onclick="logoutUser()" class="text-xs text-red-400 font-medium bg-red-500/10 px-3 py-1.5 rounded-full">Keluar</button>
             </div>
 
-            <!-- Segmented Control Tab (iOS Style) -->
             <div class="p-3 bg-[#000000]">
                 <div class="bg-[#1c1c1e] p-1 rounded-xl flex text-xs font-semibold">
                     <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white shadow-sm transition">Teman</button>
@@ -95,72 +94,60 @@
                 </div>
             </div>
 
-            <!-- Konten Sidebar -->
             <div class="flex-1 overflow-y-auto px-4 space-y-4 pb-6">
-                <!-- Cari & Tambah Teman -->
                 <div>
                     <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Tambah Teman</div>
                     <div class="flex gap-2">
-                        <input type="text" id="search-friend-input" placeholder="Cari username unik..." class="flex-1 bg-[#1c1c1e] border border-transparent focus:border-[#007AFF] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
+                        <input type="text" id="search-friend-input" placeholder="Cari username..." class="flex-1 bg-[#1c1c1e] border border-transparent focus:border-[#007AFF] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none">
                         <button onclick="searchAndAddUser()" class="bg-[#007AFF] text-white font-semibold px-4 py-2 rounded-xl text-xs">Cari</button>
                     </div>
                     <div id="search-result-container" class="mt-2"></div>
                 </div>
 
-                <!-- Daftar Teman Saya -->
                 <div>
                     <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Daftar Percakapan</div>
                     <div id="friends-list" class="space-y-1">
-                        <div class="text-xs text-gray-500 italic px-2 py-3">Belum ada teman ditambahkan.</div>
+                        <div class="text-xs text-gray-500 italic px-2 py-3">Belum ada teman.</div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <!-- AREA CHAT UTAMA (iOS Chat Interface) -->
+        <!-- AREA CHAT -->
         <main id="chat-main-view" class="flex-1 flex flex-col bg-[#000000] justify-between w-full absolute inset-0 md:relative z-20 translate-x-full md:translate-x-0 transition-transform duration-300">
-            <!-- iOS Navigation Header -->
             <header class="glass-header border-b border-white/10 px-4 pt-12 pb-3 flex justify-between items-center sticky top-0 z-10">
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleSidebar()" class="md:hidden text-[#007AFF] text-sm font-semibold flex items-center gap-1">
-                        ‹ Menu
-                    </button>
+                    <button onclick="toggleSidebar()" class="md:hidden text-[#007AFF] text-sm font-semibold flex items-center gap-1">‹ Menu</button>
                     <div class="flex flex-col">
                         <h2 class="font-bold text-sm text-white tracking-tight" id="chat-room-title">Grup Publik</h2>
                         <span class="text-[10px] text-gray-400" id="chat-room-status">Online</span>
                     </div>
                 </div>
                 
-                <!-- Tombol Titik Tiga (Room Menu) -->
                 <div id="room-settings-container" class="hidden relative">
                     <button onclick="toggleDropdownMenu()" class="w-8 h-8 rounded-full bg-[#1c1c1e] text-gray-300 hover:text-white flex items-center justify-center font-bold text-base">•••</button>
                     <div id="dropdown-menu" class="absolute right-0 mt-2 w-52 bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-2xl hidden z-40 p-1.5 space-y-1 backdrop-blur-xl">
                         <div class="px-3 py-2 text-[11px] text-gray-400 border-b border-white/10 font-medium" id="dropdown-pet-info">🐾 Pet: -</div>
-                        <button onclick="togglePetModal(true); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-white hover:bg-[#2c2c2e] transition flex items-center gap-2">⚙️ Custom Pet</button>
-                        <button onclick="revivePet(); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-amber-400 hover:bg-[#2c2c2e] transition flex items-center gap-2">💖 Pulihkan Streak</button>
+                        <button onclick="togglePetModal(true); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-white hover:bg-[#2c2c2e] transition">⚙️ Custom Pet</button>
+                        <button onclick="revivePet(); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-amber-400 hover:bg-[#2c2c2e] transition">💖 Pulihkan Streak</button>
                     </div>
                 </div>
             </header>
 
-            <!-- Wadah Pesan (Bubble Container) -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-[#000000]">
-                <div class="m-auto text-center text-gray-500 text-xs p-4">
-                    <p class="font-medium text-gray-400">ChatAnyuk iOS Experience</p>
-                    <p class="text-[11px] mt-1 text-gray-600">Pilih teman di menu untuk memulai obrolan privat.</p>
-                </div>
+                <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat chat...</div>
             </div>
 
-            <!-- iOS Input Footer -->
             <footer class="bg-[#161617] border-t border-white/10 p-2.5">
                 <form id="chat-form" onsubmit="sendMessage(event)" class="flex items-center gap-2 max-w-4xl mx-auto">
-                    <label class="cursor-pointer text-gray-400 hover:text-white p-2 rounded-full transition flex items-center justify-center text-lg" title="Kirim Foto">
+                    <label class="cursor-pointer text-gray-400 hover:text-white p-2 rounded-full transition flex items-center justify-center text-lg">
                         ➕
                         <input type="file" id="image-input" accept="image/*" onchange="previewImage(event)" class="hidden">
                     </label>
 
                     <input type="text" id="message-input" placeholder="Ketik Pesan..." autocomplete="off" class="flex-1 bg-[#2c2c2e] border border-transparent rounded-full px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#007AFF]">
                     
-                    <button type="submit" class="bg-[#007AFF] hover:bg-[#0062cc] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition shadow-md">↑</button>
+                    <button type="submit" class="bg-[#007AFF] hover:bg-[#0062cc] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition">↑</button>
                 </form>
                 <div id="image-preview-container" class="hidden mt-2 flex items-center gap-2 px-3 py-1.5 bg-[#1c1c1e] rounded-xl border border-white/10">
                     <span class="text-[11px] text-[#007AFF]">Foto terpilih</span>
@@ -171,9 +158,10 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V12 -->
+    <!-- Firebase & Logika V13 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -186,63 +174,51 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
 
-        let myName = localStorage.getItem("chat_username") || "";
+        let myName = "";
         let currentChatId = "public_room";
         let currentChatType = "public";
         let unsubscribeMessages = null;
         let base64ImageString = "";
 
-        window.onload = async function() {
-            if (myName) {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
+                
                 document.getElementById("login-modal").style.display = "none";
                 document.getElementById("my-profile-name").innerText = "@" + myName;
+
+                await setDoc(doc(db, "users", myName), {
+                    name: myName,
+                    email: user.email,
+                    lastActive: serverTimestamp()
+                }, { merge: true });
+
                 loadMyFriendsList();
                 openPublicChat();
+            } else {
+                document.getElementById("login-modal").style.display = "flex";
             }
-        }
+        });
 
-        window.loginUser = async function() {
-            const input = document.getElementById("username-input").value.trim();
-            const errEl = document.getElementById("login-error");
-            
-            if (!input) {
-                errEl.innerText = "Username tidak boleh kosong!";
-                errEl.classList.remove("hidden");
-                return;
-            }
-
+        window.loginWithGoogle = async function() {
             try {
-                const docRef = doc(db, "users", input);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    errEl.innerText = "Username sudah digunakan!";
-                    errEl.classList.remove("hidden");
-                    return;
-                }
-
-                myName = input;
-                localStorage.setItem("chat_username", myName);
-                await setDoc(docRef, { name: myName, lastActive: serverTimestamp() });
-
-                document.getElementById("login-modal").style.display = "none";
-                document.getElementById("my-profile-name").innerText = "@" + myName;
-                loadMyFriendsList();
-                openPublicChat();
-            } catch (e) {
-                errEl.innerText = "Gagal terhubung ke database.";
-                errEl.classList.remove("hidden");
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error(error);
+                document.getElementById("login-error").innerText = "Gagal login dengan Google. Pastikan Pop-up tidak diblokir.";
+                document.getElementById("login-error").classList.remove("hidden");
             }
         }
 
-        window.logoutUser = function() {
-            localStorage.removeItem("chat_username");
+        window.logoutUser = async function() {
+            await signOut(auth);
             location.reload();
         }
 
-        // --- STREAK PET ROOM ---
         function checkAndUpdateRoomStreak(chatRoomId) {
             if (!chatRoomId || chatRoomId === "public_room") return;
 
@@ -334,7 +310,6 @@
             document.getElementById("dropdown-menu").classList.toggle("hidden");
         }
 
-        // --- PENCARIAN & TEMAN ---
         window.searchAndAddUser = async function() {
             const queryName = document.getElementById("search-friend-input").value.trim();
             const resultDiv = document.getElementById("search-result-container");
