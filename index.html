@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Fullscreen View V23</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatian - Stable Instant View V24</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,10 +13,6 @@
             color: #ffffff;
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
         }
         .ios-bubble-me {
             background: #007AFF;
@@ -33,7 +29,7 @@
         }
     </style>
 </head>
-<body class="flex flex-col w-full h-full overflow-hidden select-none">
+<body class="bg-black text-white min-h-screen flex flex-col">
 
     <!-- Modal Login -->
     <div id="login-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-6">
@@ -65,12 +61,12 @@
         </div>
     </div>
 
-    <!-- Container Utama Full Screen (Tanpa Scroll Body) -->
-    <div id="app-container" class="flex-1 flex relative w-full h-full overflow-hidden bg-black max-w-md md:max-w-4xl mx-auto border-x border-white/10">
+    <!-- CONTAINER UTAMA -->
+    <div class="w-full max-w-md mx-auto flex-1 flex flex-col bg-black min-h-screen relative">
         
-        <!-- SIDEBAR (Halaman Daftar Chat) -->
-        <aside id="sidebar" class="w-full md:w-80 bg-black flex flex-col border-r border-white/10 absolute inset-0 md:relative z-20 h-full transition-transform duration-300">
-            <div class="px-4 py-4 bg-[#1c1c1e] border-b border-white/10 flex justify-between items-center shrink-0">
+        <!-- HALAMAN 1: SIDEBAR / DAFTAR CHAT -->
+        <div id="view-sidebar" class="flex flex-col flex-1 w-full bg-black">
+            <div class="px-4 py-4 bg-[#1c1c1e] border-b border-white/10 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold text-white">Chatian</h1>
                     <p class="text-xs text-gray-400" id="my-profile-name">@user</p>
@@ -78,7 +74,7 @@
                 <button onclick="logoutUser()" class="text-xs text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full">Keluar</button>
             </div>
 
-            <div class="p-3 space-y-2 shrink-0">
+            <div class="p-3 space-y-2 bg-black">
                 <div class="bg-[#1c1c1e] p-1 rounded-xl flex text-xs font-semibold">
                     <button onclick="switchTab('chats')" id="tab-chats-btn" class="flex-1 py-1.5 text-center rounded-lg bg-[#2c2c2e] text-white">Teman</button>
                     <button onclick="switchTab('groups')" id="tab-groups-btn" class="flex-1 py-1.5 text-center rounded-lg text-gray-400">Grup</button>
@@ -86,7 +82,7 @@
                 <button onclick="openCreateGroupModal()" class="w-full bg-[#2c2c2e] text-[#007AFF] font-semibold py-2 rounded-xl text-xs">➕ Buat Grup Baru</button>
             </div>
 
-            <div class="p-4 space-y-4 overflow-y-auto flex-1">
+            <div class="p-4 space-y-4 flex-1">
                 <div id="section-search">
                     <div class="text-[11px] font-semibold text-gray-500 uppercase mb-2">Tambah Teman</div>
                     <div class="flex gap-2">
@@ -103,13 +99,13 @@
                     </div>
                 </div>
             </div>
-        </aside>
+        </div>
 
-        <!-- AREA CHAT (Halaman Ruang Chat Full Screen) -->
-        <main id="chat-main-view" class="flex-1 flex flex-col bg-black absolute inset-0 md:relative z-30 h-full translate-x-full md:translate-x-0 transition-transform duration-300">
-            <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
+        <!-- HALAMAN 2: RUANG CHAT (Awalnya disembunyikan, muncul instan saat diklik) -->
+        <div id="view-chat" class="hidden flex-col flex-1 w-full bg-black h-screen fixed inset-0 z-40 max-w-md mx-auto">
+            <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <button onclick="backToSidebar()" class="md:hidden text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
+                    <button onclick="backToSidebar()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
                     <div class="flex flex-col">
                         <div class="flex items-center gap-1.5">
                             <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
@@ -123,7 +119,7 @@
                 
                 <div id="room-settings-container" class="hidden relative">
                     <button onclick="toggleDropdownMenu()" class="w-8 h-8 rounded-full bg-[#2c2c2e] text-white flex items-center justify-center font-bold">•••</button>
-                    <div id="dropdown-menu" class="absolute right-0 mt-2 w-48 bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-2xl hidden z-40 p-1.5 space-y-1">
+                    <div id="dropdown-menu" class="absolute right-0 mt-2 w-48 bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-2xl hidden z-50 p-1.5 space-y-1">
                         <div class="px-3 py-2 text-[11px] text-gray-400 border-b border-white/10" id="dropdown-pet-info">🐾 Pet: -</div>
                         <button onclick="togglePetModal(true); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-white hover:bg-[#2c2c2e]">⚙️ Custom Pet</button>
                         <button onclick="revivePet(); toggleDropdownMenu();" class="w-full text-left px-3 py-2 rounded-xl text-xs text-amber-400 hover:bg-[#2c2c2e]">💖 Pulihkan Streak</button>
@@ -131,13 +127,13 @@
                 </div>
             </header>
 
-            <!-- Container Pesan (Bisa di-scroll bagian pesannya saja, halaman utamanya tetap diam) -->
+            <!-- Container Pesan (Bisa di-scroll bagian chatnya saja) -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-black">
-                <div class="m-auto text-center text-gray-600 text-xs p-4">Pilih teman atau grup untuk mulai mengobrol.</div>
+                <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat pesan...</div>
             </div>
 
-            <!-- Footer Kirim Pesan (Selalu menempel rapi di bawah) -->
-            <footer class="bg-[#1c1c1e] border-t border-white/10 p-2.5 shrink-0">
+            <!-- Footer Kirim Pesan -->
+            <footer class="bg-[#1c1c1e] border-t border-white/10 p-2.5">
                 <form id="chat-form" onsubmit="sendMessage(event)" class="flex items-center gap-2 max-w-4xl mx-auto">
                     <label class="cursor-pointer text-gray-400 hover:text-white p-2 text-lg">
                         ➕
@@ -155,7 +151,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V23 -->
+    <!-- Firebase & Logika V24 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -418,6 +414,7 @@
             });
         }
 
+        // FUNGSI PINDAH HALAMAN INSTAN TANPA SCROLL
         window.openPrivateChat = function(friendName) {
             currentChatType = "private";
             const sortedNames = [myName, friendName].sort();
@@ -431,8 +428,11 @@
             updateRoomPetUI(currentChatId);
             subscribeToMessages(currentChatId);
 
-            // Geser halaman masuk penuh ke room chat (tanpa scroll)
-            document.getElementById("chat-main-view").classList.remove("translate-x-full");
+            // Sembunyikan sidebar, tampilkan room chat secara instan
+            document.getElementById("view-sidebar").style.display = "none";
+            let chatView = document.getElementById("view-chat");
+            chatView.style.display = "flex";
+            window.scrollTo(0, 0);
         }
 
         window.openGroupChat = function(groupId, groupName) {
@@ -446,12 +446,18 @@
 
             subscribeToMessages(groupId);
 
-            // Geser halaman masuk penuh ke room grup (tanpa scroll)
-            document.getElementById("chat-main-view").classList.remove("translate-x-full");
+            // Sembunyikan sidebar, tampilkan room grup secara instan
+            document.getElementById("view-sidebar").style.display = "none";
+            let chatView = document.getElementById("view-chat");
+            chatView.style.display = "flex";
+            window.scrollTo(0, 0);
         }
 
         window.backToSidebar = function() {
-            document.getElementById("chat-main-view").classList.add("translate-x-full");
+            if (unsubscribeMessages) unsubscribeMessages();
+            document.getElementById("view-chat").style.display = "none";
+            document.getElementById("view-sidebar").style.display = "flex";
+            window.scrollTo(0, 0);
         }
 
         function subscribeToMessages(collectionName) {
@@ -493,7 +499,7 @@
         window.previewImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 800 * 1024) { alert("Mksimal 800KB!"); return; }
+            if (file.size > 800 * 1024) { alert("Maksimal 800KB!"); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 base64ImageString = e.target.result;
