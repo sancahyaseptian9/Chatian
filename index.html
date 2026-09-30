@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Full Mobile Responsive V19</title>
+    <title>Chatian - Stable V20</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -40,7 +40,7 @@
 <body class="flex flex-col h-full w-full overflow-hidden select-none">
 
     <!-- Modal Login dengan Google -->
-    <div id="login-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-6 hidden">
+    <div id="login-modal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-6">
         <div class="bg-[#1c1c1e] p-8 rounded-3xl w-full max-w-xs shadow-2xl border border-white/10 text-center">
             <div class="text-5xl mb-3">💬</div>
             <h2 class="text-xl font-bold mb-1 text-white">Chatian</h2>
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Layout Utama Full Screen Mobile Friendly -->
+    <!-- Layout Utama -->
     <div class="flex flex-1 overflow-hidden relative w-full h-full bg-[#000000]">
         
         <!-- SIDEBAR -->
@@ -175,7 +175,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V19 -->
+    <!-- Firebase & Logika V20 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -206,33 +206,47 @@
             Notification.requestPermission();
         }
 
+        // Handler utama auth yang aman dari blackscreen
         onAuthStateChanged(auth, async (user) => {
             const loginModal = document.getElementById("login-modal");
-            if (user) {
-                myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
-                
-                loginModal.style.display = "none";
-                document.getElementById("my-profile-name").innerText = "@" + myName;
+            try {
+                if (user) {
+                    myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
+                    
+                    // Pastikan modal tertutup total
+                    loginModal.style.display = "none";
+                    loginModal.classList.add("hidden");
+                    
+                    document.getElementById("my-profile-name").innerText = "@" + myName;
 
-                await setDoc(doc(db, "users", myName), {
-                    name: myName,
-                    email: user.email,
-                    lastActive: serverTimestamp()
-                }, { merge: true });
+                    await setDoc(doc(db, "users", myName), {
+                        name: myName,
+                        email: user.email,
+                        lastActive: serverTimestamp()
+                    }, { merge: true });
 
-                loadListContent();
-            } else {
+                    loadListContent();
+                } else {
+                    // Paksa tampilkan modal login jika belum ada user
+                    loginModal.style.display = "flex";
+                    loginModal.classList.remove("hidden");
+                }
+            } catch (err) {
+                console.error("Auth state error:", err);
                 loginModal.style.display = "flex";
+                loginModal.classList.remove("hidden");
             }
         });
 
         window.loginWithGoogle = async function() {
             try {
+                document.getElementById("login-error").classList.add("hidden");
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error(error);
-                document.getElementById("login-error").innerText = "Gagal login dengan Google.";
-                document.getElementById("login-error").classList.remove("hidden");
+                const errEl = document.getElementById("login-error");
+                errEl.innerText = "Gagal login: " + (error.message || "Pastikan pop-up diizinkan.");
+                errEl.classList.remove("hidden");
             }
         }
 
