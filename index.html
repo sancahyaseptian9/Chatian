@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="ZTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - WhatsApp & TikTok Style V17</title>
+    <title>Chatian - WhatsApp & TikTok Style V18</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -173,7 +173,7 @@
         </main>
     </div>
 
-    <!-- Firebase & Logika V17 -->
+    <!-- Firebase & Logika V18 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -200,7 +200,6 @@
         let unsubscribeMessages = null;
         let base64ImageString = "";
 
-        // Minta izin Browser Notification untuk notifikasi ala WhatsApp
         if ("Notification" in window && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
@@ -209,7 +208,6 @@
             if (user) {
                 myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
                 
-                // Sembunyikan modal login karena sudah masuk
                 document.getElementById("login-modal").style.display = "none";
                 document.getElementById("my-profile-name").innerText = "@" + myName;
 
@@ -221,7 +219,6 @@
 
                 loadListContent();
             } else {
-                // Tampilkan modal login hanya jika belum login
                 document.getElementById("login-modal").style.display = "flex";
             }
         });
@@ -241,7 +238,6 @@
             location.reload();
         }
 
-        // --- MANAJEMEN TAB (TEMAN / GRUP) ---
         window.switchTab = function(tabName) {
             currentTab = tabName;
             if (tabName === 'chats') {
@@ -266,7 +262,6 @@
             }
         }
 
-        // --- BUAT GRUP ---
         window.openCreateGroupModal = async function() {
             const groupName = prompt("Masukkan Nama Grup baru:");
             if (!groupName || !groupName.trim()) return;
@@ -311,7 +306,6 @@
             });
         }
 
-        // --- STREAK PET & ROOM ---
         function checkAndUpdateRoomStreak(chatRoomId) {
             if (!chatRoomId || currentChatType !== "private") return;
 
@@ -407,7 +401,6 @@
             document.getElementById("dropdown-menu").classList.toggle("hidden");
         }
 
-        // --- PENCARIAN TEMAN ---
         window.searchAndAddUser = async function() {
             const queryName = document.getElementById("search-friend-input").value.trim();
             const resultDiv = document.getElementById("search-result-container");
@@ -493,7 +486,6 @@
             }
         }
 
-        // --- REALTIME MESSAGES & NOTIFIKASI ALA WA ---
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
             const chatContainer = document.getElementById("chat-container");
@@ -531,7 +523,6 @@
                     chatContainer.appendChild(bubble);
                 });
 
-                // Cek pesan baru masuk dari orang lain untuk memunculkan notifikasi WhatsApp style
                 if (!isFirstLoad) {
                     const changes = snapshot.docChanges();
                     changes.forEach((change) => {
