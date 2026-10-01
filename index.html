@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Advanced V32</title>
+    <title>Chatian - Dynamic Ticks V33</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    <!-- Popup Menu Action Sheet (Reply, Emoji, Hapus) -->
+    <!-- Popup Menu Action Sheet -->
     <div id="action-sheet" class="fixed inset-0 bg-black/70 z-50 hidden flex items-end justify-center pb-8 p-4 backdrop-blur-sm" onclick="closeActionSheet()">
         <div class="bg-[#1c1c1e] w-full max-w-sm rounded-3xl p-4 border border-white/10 shadow-2xl space-y-4" onclick="event.stopPropagation()">
             <div class="flex justify-around bg-[#2c2c2e] py-2.5 px-3 rounded-2xl text-xl">
@@ -128,7 +128,6 @@
 
         <!-- HALAMAN 2: RUANG CHAT -->
         <div id="view-chat" class="hidden absolute inset-0 flex-col bg-black z-30 overflow-hidden">
-            <!-- Header Chat (Dilengkapi Status Online & Last Seen) -->
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <button onclick="backToSidebar()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
@@ -153,12 +152,10 @@
                 </div>
             </header>
 
-            <!-- Container Pesan -->
             <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col bg-black">
                 <div class="m-auto text-center text-gray-600 text-xs p-4">Memuat pesan...</div>
             </div>
 
-            <!-- Footer / Kolom Ketik Pesan -->
             <footer class="bg-[#1c1c1e] border-t border-white/10 p-3 shrink-0">
                 <div id="reply-preview-box" class="hidden mb-2 bg-[#2c2c2e] px-3 py-2 rounded-xl border-l-4 border-[#007AFF] flex justify-between items-center">
                     <div class="text-[11px] truncate">
@@ -173,7 +170,6 @@
                         ➕
                         <input type="file" id="image-input" accept="image/*" onchange="previewImage(event)" class="hidden">
                     </label>
-                    <!-- Input Pesan dengan Trigger Typing Indicator -->
                     <input type="text" id="message-input" placeholder="Ketik Pesan..." autocomplete="off" oninput="handleTypingInput()" class="flex-1 bg-[#2c2c2e] rounded-full px-4 py-2.5 text-xs text-white outline-none">
                     <button type="submit" class="bg-[#007AFF] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0">↑</button>
                 </form>
@@ -186,11 +182,11 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V32 -->
+    <!-- Firebase & Logika V33 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc, deleteField, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCu6XJmJD4MHBFPfwohvy8ZkouoonN3uPw",
@@ -217,7 +213,6 @@
         let selectedMessageForAction = null;
         let typingTimeout = null;
 
-        // Kirim deteksi heartbeat online setiap 10 detik
         setInterval(async () => {
             if (myName) {
                 try {
@@ -387,7 +382,7 @@
 
         window.revivePet = function() {
             if (currentChatType !== "private") return;
-            let streakKey = "room_streak_" + myName + "_" + currentChatId;
+            let streakKey = "room_streak_" + myName + "_" + chatRoomId;
             let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 1, "revives": 5}');
             if (streakData.revives > 0) {
                 streakData.revives -= 1;
@@ -495,7 +490,6 @@
             document.getElementById("view-sidebar").style.display = "flex";
         }
 
-        // --- PENGAMAT STATUS ONLINE & LAST SEEN ---
         function listenToUserStatus(targetUserName) {
             if (unsubscribeRoomStatus) unsubscribeRoomStatus();
             const statusEl = document.getElementById("chat-room-status");
@@ -507,14 +501,12 @@
                 }
                 const data = docSnap.data();
                 
-                // Cek apakah user sedang mengetik di ruang chat ini
                 if (data.typingIn === currentChatId) {
                     statusEl.innerText = "sedang mengetik...";
                     statusEl.className = "text-[10px] text-[#007AFF] font-semibold animate-pulse";
                     return;
                 }
 
-                // Cek status Online (jika aktif dalam 15 detik terakhir)
                 if (data.lastActive) {
                     const lastActiveDate = data.lastActive.toDate();
                     const diffSeconds = (new Date() - lastActiveDate) / 1000;
@@ -540,7 +532,6 @@
             return isToday ? "pukul " + timeStr : "kemarin pukul " + timeStr;
         }
 
-        // --- SISTEM TYPING INDICATOR (SEDANG MENGETIK) ---
         window.handleTypingInput = async function() {
             if (!currentChatId) return;
             try {
@@ -548,7 +539,7 @@
                 if (typingTimeout) clearTimeout(typingTimeout);
                 typingTimeout = setTimeout(async () => {
                     await clearTypingStatus();
-                }, 2000); // Reset status mengetik setelah 2 detik diam
+                }, 2000);
             } catch (e) {}
         }
 
@@ -558,17 +549,32 @@
             } catch (e) {}
         }
 
-        // --- SISTEM RENDER PESAN DENGAN CENTANG (✓ / ✓✓) ---
+        // --- SISTEM DINAMIS CENTANG WHATSAPP (C1, C2, & C2 BIRU) ---
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
             const chatContainer = document.getElementById("chat-container");
             const q = query(collection(db, collectionName), orderBy("createdAt", "asc"));
 
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+            unsubscribeMessages = onSnapshot(q, async (snapshot) => {
                 chatContainer.innerHTML = "";
                 if (snapshot.empty) {
                     chatContainer.innerHTML = `<div class="m-auto text-center text-gray-600 text-xs py-10">Mulai percakapan sekarang...</div>`;
                     return;
+                }
+
+                // Batch update: Jika kita membuka chat ini, ubah status pesan dari teman yang tadinya 'sent'/'delivered' menjadi 'read' (C2 Biru)
+                const batch = writeBatch(db);
+                let needCommit = false;
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (data.name !== myName && data.status !== "read") {
+                        batch.update(docSnap.ref, { status: "read" });
+                        needCommit = true;
+                    }
+                });
+                if (needCommit) {
+                    await batch.commit().catch(() => {});
                 }
 
                 snapshot.forEach((docSnap) => {
@@ -594,8 +600,17 @@
                         reactionsHtml = `<div class="absolute -bottom-2 ${isMe ? 'left-2' : 'right-2'} bg-[#1c1c1e] border border-white/10 px-1.5 py-0.5 rounded-full text-[10px] shadow">${emojiList}</div>`;
                     }
 
-                    // Status centang pesan ala WhatsApp (Hanya muncul di pesan milik kita)
-                    let tickHtml = isMe ? `<span class="text-[10px] text-blue-300 font-bold ml-1">✓✓</span>` : "";
+                    // Render Centang Dinamis WhatsApp
+                    let tickHtml = "";
+                    if (isMe) {
+                        if (data.status === "read") {
+                            tickHtml = `<span class="text-[10px] text-blue-400 font-bold ml-1" title="Dibaca">✓✓</span>`; // C2 Biru
+                        } else if (data.status === "delivered") {
+                            tickHtml = `<span class="text-[10px] text-gray-400 font-bold ml-1" title="Terkirim">✓✓</span>`; // C2 Abu-abu
+                        } else {
+                            tickHtml = `<span class="text-[10px] text-gray-400 font-bold ml-1" title="Terkirim ke server">✓</span>`; // C1 (Centang Satu)
+                        }
+                    }
 
                     const wrapper = document.createElement("div");
                     wrapper.className = `flex flex-col max-w-[80%] my-2 relative chat-bubble-wrapper ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
@@ -723,7 +738,7 @@
         window.previewImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 800 * 1024) { alert("Maksimal 800KB!"); return; }
+            if (file.size > 800 * 1024) { alert("Mksimal 800KB!"); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 base64ImageString = e.target.result;
@@ -753,7 +768,8 @@
                     text: text,
                     image: base64ImageString || "",
                     createdAt: serverTimestamp(),
-                    reactions: {}
+                    reactions: {},
+                    status: "delivered" // Langsung masuk sebagai C2 abu-abu saat terkirim ke server
                 };
 
                 if (replyingToData) {
