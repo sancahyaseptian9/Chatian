@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Perfect Delete V31</title>
+    <title>Chatian - Advanced V32</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    <!-- Popup Menu Action Sheet (Dilengkapi Tombol Tong Sampah) -->
+    <!-- Popup Menu Action Sheet (Reply, Emoji, Hapus) -->
     <div id="action-sheet" class="fixed inset-0 bg-black/70 z-50 hidden flex items-end justify-center pb-8 p-4 backdrop-blur-sm" onclick="closeActionSheet()">
         <div class="bg-[#1c1c1e] w-full max-w-sm rounded-3xl p-4 border border-white/10 shadow-2xl space-y-4" onclick="event.stopPropagation()">
             <div class="flex justify-around bg-[#2c2c2e] py-2.5 px-3 rounded-2xl text-xl">
@@ -128,7 +128,7 @@
 
         <!-- HALAMAN 2: RUANG CHAT -->
         <div id="view-chat" class="hidden absolute inset-0 flex-col bg-black z-30 overflow-hidden">
-            <!-- Header Chat -->
+            <!-- Header Chat (Dilengkapi Status Online & Last Seen) -->
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <button onclick="backToSidebar()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
@@ -173,7 +173,8 @@
                         ➕
                         <input type="file" id="image-input" accept="image/*" onchange="previewImage(event)" class="hidden">
                     </label>
-                    <input type="text" id="message-input" placeholder="Ketik Pesan..." autocomplete="off" class="flex-1 bg-[#2c2c2e] rounded-full px-4 py-2.5 text-xs text-white outline-none">
+                    <!-- Input Pesan dengan Trigger Typing Indicator -->
+                    <input type="text" id="message-input" placeholder="Ketik Pesan..." autocomplete="off" oninput="handleTypingInput()" class="flex-1 bg-[#2c2c2e] rounded-full px-4 py-2.5 text-xs text-white outline-none">
                     <button type="submit" class="bg-[#007AFF] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0">↑</button>
                 </form>
                 <div id="image-preview-container" class="hidden mt-2 flex items-center gap-2 px-3 py-1.5 bg-[#2c2c2e] rounded-xl">
@@ -185,11 +186,11 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V31 -->
+    <!-- Firebase & Logika V32 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCu6XJmJD4MHBFPfwohvy8ZkouoonN3uPw",
@@ -210,9 +211,20 @@
         let currentChatType = "private";
         let currentTab = "chats";
         let unsubscribeMessages = null;
+        let unsubscribeRoomStatus = null;
         let base64ImageString = "";
         let replyingToData = null;
         let selectedMessageForAction = null;
+        let typingTimeout = null;
+
+        // Kirim deteksi heartbeat online setiap 10 detik
+        setInterval(async () => {
+            if (myName) {
+                try {
+                    await setDoc(doc(db, "users", myName), { lastActive: serverTimestamp() }, { merge: true });
+                } catch (e) {}
+            }
+        }, 10000);
 
         onAuthStateChanged(auth, async (user) => {
             const loginModal = document.getElementById("login-modal");
@@ -448,11 +460,12 @@
             currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
 
             document.getElementById("chat-room-title").innerText = "@" + friendName;
-            document.getElementById("chat-room-status").innerText = "Private Chat";
             document.getElementById("room-settings-container").classList.remove("hidden");
             
             checkAndUpdateRoomStreak(currentChatId);
             updateRoomPetUI(currentChatId);
+            
+            listenToUserStatus(friendName);
             subscribeToMessages(currentChatId);
 
             document.getElementById("view-sidebar").style.display = "none";
@@ -476,12 +489,76 @@
 
         window.backToSidebar = function() {
             if (unsubscribeMessages) unsubscribeMessages();
+            if (unsubscribeRoomStatus) unsubscribeRoomStatus();
+            clearTypingStatus();
             document.getElementById("view-chat").style.display = "none";
             document.getElementById("view-sidebar").style.display = "flex";
         }
 
-        // --- SISTEM RENDER PESAN DENGAN GESTUR TAHAN LAMA (LONG PRESS) YANG RESPONSIF ---
+        // --- PENGAMAT STATUS ONLINE & LAST SEEN ---
+        function listenToUserStatus(targetUserName) {
+            if (unsubscribeRoomStatus) unsubscribeRoomStatus();
+            const statusEl = document.getElementById("chat-room-status");
 
+            unsubscribeRoomStatus = onSnapshot(doc(db, "users", targetUserName), (docSnap) => {
+                if (!docSnap.exists()) {
+                    statusEl.innerText = "Offline";
+                    return;
+                }
+                const data = docSnap.data();
+                
+                // Cek apakah user sedang mengetik di ruang chat ini
+                if (data.typingIn === currentChatId) {
+                    statusEl.innerText = "sedang mengetik...";
+                    statusEl.className = "text-[10px] text-[#007AFF] font-semibold animate-pulse";
+                    return;
+                }
+
+                // Cek status Online (jika aktif dalam 15 detik terakhir)
+                if (data.lastActive) {
+                    const lastActiveDate = data.lastActive.toDate();
+                    const diffSeconds = (new Date() - lastActiveDate) / 1000;
+
+                    if (diffSeconds < 20) {
+                        statusEl.innerText = "Online";
+                        statusEl.className = "text-[10px] text-green-400 font-semibold";
+                    } else {
+                        statusEl.innerText = "Terakhir dilihat " + formatLastSeen(lastActiveDate);
+                        statusEl.className = "text-[10px] text-gray-400";
+                    }
+                } else {
+                    statusEl.innerText = "Offline";
+                    statusEl.className = "text-[10px] text-gray-400";
+                }
+            });
+        }
+
+        function formatLastSeen(date) {
+            const now = new Date();
+            const isToday = date.toDateString() === now.toDateString();
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return isToday ? "pukul " + timeStr : "kemarin pukul " + timeStr;
+        }
+
+        // --- SISTEM TYPING INDICATOR (SEDANG MENGETIK) ---
+        window.handleTypingInput = async function() {
+            if (!currentChatId) return;
+            try {
+                await updateDoc(doc(db, "users", myName), { typingIn: currentChatId });
+                if (typingTimeout) clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(async () => {
+                    await clearTypingStatus();
+                }, 2000); // Reset status mengetik setelah 2 detik diam
+            } catch (e) {}
+        }
+
+        async function clearTypingStatus() {
+            try {
+                await updateDoc(doc(db, "users", myName), { typingIn: deleteField() });
+            } catch (e) {}
+        }
+
+        // --- SISTEM RENDER PESAN DENGAN CENTANG (✓ / ✓✓) ---
         function subscribeToMessages(collectionName) {
             if (unsubscribeMessages) unsubscribeMessages();
             const chatContainer = document.getElementById("chat-container");
@@ -517,6 +594,9 @@
                         reactionsHtml = `<div class="absolute -bottom-2 ${isMe ? 'left-2' : 'right-2'} bg-[#1c1c1e] border border-white/10 px-1.5 py-0.5 rounded-full text-[10px] shadow">${emojiList}</div>`;
                     }
 
+                    // Status centang pesan ala WhatsApp (Hanya muncul di pesan milik kita)
+                    let tickHtml = isMe ? `<span class="text-[10px] text-blue-300 font-bold ml-1">✓✓</span>` : "";
+
                     const wrapper = document.createElement("div");
                     wrapper.className = `flex flex-col max-w-[80%] my-2 relative chat-bubble-wrapper ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
                     let senderNameHtml = (currentChatType === "group" && !isMe) ? `<span class="text-[9px] text-gray-400 mb-0.5 px-1">${escapeHtml(data.name)}</span>` : "";
@@ -543,28 +623,17 @@
                         if (diffX > 50) triggerReply(docId, data.text || '[Gambar]', data.name);
                     });
 
-                    // --- LOGIKA LONG PRESS (TEKAN LAMA) YANG DIOPTIMALKAN UNTUK HP ---
+                    // Gestur Long Press untuk Menu Aksi
                     let pressTimer = null;
-                    
                     const startPress = () => {
                         if (pressTimer) clearTimeout(pressTimer);
-                        pressTimer = setTimeout(() => {
-                            openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
-                        }, 500); // 500ms (0.5 detik tahan lama)
+                        pressTimer = setTimeout(() => { openActionSheet(docId, data.name, data.text || '[Gambar]', isMe); }, 500);
                     };
-
-                    const cancelPress = () => {
-                        if (pressTimer) {
-                            clearTimeout(pressTimer);
-                            pressTimer = null;
-                        }
-                    };
+                    const cancelPress = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
 
                     bubbleDiv.addEventListener('touchstart', startPress, {passive: true});
                     bubbleDiv.addEventListener('touchmove', cancelPress, {passive: true});
                     bubbleDiv.addEventListener('touchend', cancelPress, {passive: true});
-                    
-                    // Dukungan klik kanan / klik lama via mouse laptop/PC
                     bubbleDiv.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         openActionSheet(docId, data.name, data.text || '[Gambar]', isMe);
@@ -573,10 +642,10 @@
                     if (senderNameHtml) wrapper.appendChild(senderNameHtml);
                     wrapper.appendChild(bubbleDiv);
 
-                    const timeSpan = document.createElement("span");
-                    timeSpan.className = "text-[9px] text-gray-500 mt-0.5 px-1";
-                    timeSpan.innerText = timeString;
-                    wrapper.appendChild(timeSpan);
+                    const infoFooter = document.createElement("div");
+                    infoFooter.className = "flex items-center gap-0.5 mt-0.5 px-1";
+                    infoFooter.innerHTML = `<span class="text-[9px] text-gray-500">${timeString}</span>${tickHtml}`;
+                    wrapper.appendChild(infoFooter);
 
                     chatContainer.appendChild(wrapper);
                 });
@@ -587,14 +656,8 @@
         function openActionSheet(msgId, senderName, msgText, isMe) {
             selectedMessageForAction = { id: msgId, sender: senderName, text: msgText };
             const deleteBtn = document.getElementById("btn-delete-msg");
-            
-            // Tombol hapus (tong sampah) HANYA MUNCUL jika itu pesan yang dikirim oleh kita sendiri
-            if (isMe) {
-                deleteBtn.classList.remove("hidden");
-            } else {
-                deleteBtn.classList.add("hidden");
-            }
-            
+            if (isMe) deleteBtn.classList.remove("hidden");
+            else deleteBtn.classList.add("hidden");
             document.getElementById("action-sheet").classList.remove("hidden");
         }
 
@@ -684,6 +747,7 @@
             if (!currentChatId) { alert("Pilih chat/grup dulu!"); return; }
 
             try {
+                await clearTypingStatus();
                 let messageData = {
                     name: myName,
                     text: text,
