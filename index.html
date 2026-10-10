@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Profile V35</title>
+    <title>Chatian - Friend Profile & Crop V36</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -142,7 +142,7 @@
             </div>
         </div>
 
-        <!-- HALAMAN 1.5: HALAMAN PROFIL PENGGUNA (ALA WHATSAPP) -->
+        <!-- HALAMAN 1.5: HALAMAN PROFIL SAYA & CROP TOOL -->
         <div id="view-profile" class="hidden absolute inset-0 flex-col bg-black z-20 overflow-hidden">
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0">
                 <button onclick="closeProfileView()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
@@ -150,15 +150,28 @@
             </header>
 
             <div class="p-6 flex-1 overflow-y-auto space-y-6 flex flex-col items-center">
-                <!-- Foto Profil Besar -->
+                <!-- Foto Profil Besar & Tool Crop -->
                 <div class="relative group">
                     <div id="profile-avatar-large" class="w-28 h-28 rounded-full bg-[#1c1c1e] border-2 border-white/20 flex items-center justify-center text-4xl overflow-hidden shadow-xl">
                         👤
                     </div>
                     <label class="absolute bottom-0 right-0 bg-[#007AFF] text-white p-2 rounded-full cursor-pointer shadow-lg text-xs">
                         📷
-                        <input type="file" id="profile-pic-input" accept="image/*" onchange="uploadProfilePicture(event)" class="hidden">
+                        <input type="file" id="profile-pic-input" accept="image/*" onchange="startImageCrop(event)" class="hidden">
                     </label>
+                </div>
+
+                <!-- Kotak Penyesuaian / Crop Sederhana -->
+                <div id="crop-container" class="hidden w-full max-w-xs bg-[#1c1c1e] p-4 rounded-2xl border border-white/10 space-y-3 text-center">
+                    <div class="text-xs font-bold text-white">Sesuaikan Area Foto (Zoom / Geser)</div>
+                    <div class="relative w-40 h-40 mx-auto overflow-hidden rounded-full border-2 border-[#007AFF] bg-black">
+                        <img id="crop-preview-img" class="absolute max-w-none cursor-grab" style="width: 150%; left: -25%; top: -25%;">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="adjustZoom(0.1)" class="flex-1 bg-[#2c2c2e] py-1.5 rounded-xl text-xs">Zoom +</button>
+                        <button onclick="adjustZoom(-0.1)" class="flex-1 bg-[#2c2c2e] py-1.5 rounded-xl text-xs">Zoom -</button>
+                    </div>
+                    <button onclick="applyCrop()" class="w-full bg-[#007AFF] text-white py-2 rounded-xl text-xs font-semibold">Terapkan Potongan</button>
                 </div>
 
                 <div class="w-full space-y-4 max-w-xs">
@@ -185,16 +198,22 @@
         <!-- HALAMAN 2: RUANG CHAT -->
         <div id="view-chat" class="hidden absolute inset-0 flex-col bg-black z-30 overflow-hidden">
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2.5">
                     <button onclick="backToSidebar()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
-                    <div class="flex flex-col">
-                        <div class="flex items-center gap-1.5">
-                            <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
-                            <div id="tiktok-streak-badge" onclick="clickStreakBadge()" class="hidden items-center gap-1 bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer">
-                                <span id="streak-icon">🔥</span> <span id="streak-number">0</span>
-                            </div>
+                    <!-- Profil Teman di Header Chat -->
+                    <div class="flex items-center gap-2">
+                        <div id="chat-header-avatar" class="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-xs overflow-hidden border border-white/10">
+                            👤
                         </div>
-                        <span class="text-[10px] text-gray-400" id="chat-room-status">Online</span>
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-1.5">
+                                <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
+                                <div id="tiktok-streak-badge" onclick="clickStreakBadge()" class="hidden items-center gap-1 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer">
+                                    <span id="streak-icon">🔥</span> <span id="streak-number">0</span>
+                                </div>
+                            </div>
+                            <span class="text-[10px] text-gray-400" id="chat-room-status">Online</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -238,7 +257,7 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V35 -->
+    <!-- Firebase & Logika V36 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -270,6 +289,7 @@
         let replyingToData = null;
         let selectedMessageForAction = null;
         let typingTimeout = null;
+        let currentZoom = 1;
 
         setInterval(async () => {
             if (myName) {
@@ -285,7 +305,6 @@
                 myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
                 loginModal.style.display = "none";
 
-                // Ambil atau buat data profil user di Firestore
                 const userRef = doc(db, "users", myName);
                 const userSnap = await getDoc(userRef);
 
@@ -329,6 +348,7 @@
 
         window.openProfileView = async function() {
             document.getElementById("profile-username-display").value = "@" + myName;
+            document.getElementById("crop-container").classList.add("hidden");
             const userSnap = await getDoc(doc(db, "users", myName));
             if (userSnap.exists()) {
                 let d = userSnap.data();
@@ -346,16 +366,41 @@
             document.getElementById("view-profile").style.display = "none";
         }
 
-        window.uploadProfilePicture = function(e) {
+        // --- FITUR CROP / PENYESUAIAN FOTO PROFIL ---
+        window.startImageCrop = function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 800 * 1024) { alert("Maksimal ukuran foto 800KB!"); return; }
+            if (file.size > 1500 * 1024) { alert("Ukuran file maksimal 1.5MB!"); return; }
             const reader = new FileReader();
             reader.onload = function(event) {
-                profilePicBase64 = event.target.result;
-                document.getElementById("profile-avatar-large").innerHTML = `<img src="${profilePicBase64}" class="w-full h-full object-cover">`;
+                const imgEl = document.getElementById("crop-preview-img");
+                imgEl.src = event.target.result;
+                currentZoom = 1;
+                imgEl.style.transform = `scale(1)`;
+                document.getElementById("crop-container").classList.remove("hidden");
             }
             reader.readAsDataURL(file);
+        }
+
+        window.adjustZoom = function(amount) {
+            currentZoom = Math.max(1, currentZoom + amount);
+            const imgEl = document.getElementById("crop-preview-img");
+            imgEl.style.transform = `scale(${currentZoom})`;
+        }
+
+        window.applyCrop = function() {
+            const imgEl = document.getElementById("crop-preview-img");
+            const canvas = document.createElement("canvas");
+            canvas.width = 300;
+            canvas.height = 300;
+            const ctx = canvas.getContext("2d");
+
+            ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+            profilePicBase64 = canvas.toDataURL("image/jpeg", 0.85);
+
+            document.getElementById("profile-avatar-large").innerHTML = `<img src="${profilePicBase64}" class="w-full h-full object-cover">`;
+            document.getElementById("crop-container").classList.add("hidden");
+            alert("Foto berhasil dipotong dan disesuaikan!");
         }
 
         window.saveUserProfile = async function() {
@@ -453,6 +498,113 @@
                 btn.onclick = () => { openGroupChat(gId, gName); };
                 listDiv.appendChild(btn);
             });
+        }
+
+        // --- RENDER DAFTAR TEMAN DENGAN FOTO PROFIL & NAMA ---
+        async function loadMyFriendsList() {
+            const friendsDiv = document.getElementById("friends-list");
+            let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
+            friendsDiv.innerHTML = "";
+            if (myFriends.length === 0) {
+                friendsDiv.innerHTML = `<div class="text-xs text-gray-500 italic py-2">Belum ada teman.</div>`;
+                return;
+            }
+
+            for (let uName of myFriends) {
+                let friendDisplayName = uName;
+                let friendAvatar = "";
+                let friendBio = "Online";
+
+                try {
+                    const snap = await getDoc(doc(db, "users", uName));
+                    if (snap.exists()) {
+                        let d = snap.data();
+                        if (d.displayName) friendDisplayName = d.displayName;
+                        if (d.avatar) friendAvatar = d.avatar;
+                        if (d.bio) friendBio = d.bio;
+                    }
+                } catch (e) {}
+
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left px-3 py-2.5 rounded-xl bg-[#1c1c1e] text-xs flex justify-between items-center mb-1 hover:bg-[#2c2c2e]";
+                
+                let avatarHtml = friendAvatar ? `<img src="${friendAvatar}" class="w-9 h-9 rounded-full object-cover">` : `<div class="w-9 h-9 rounded-full bg-[#2c2c2e] flex items-center justify-center text-sm font-bold">👤</div>`;
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        ${avatarHtml}
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-white">${escapeHtml(friendDisplayName)}</span>
+                            <span class="text-[10px] text-gray-400 truncate max-w-[150px]">${escapeHtml(friendBio)}</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-[#007AFF]">Chat ›</span>
+                `;
+                btn.onclick = () => { openPrivateChat(uName, friendDisplayName, friendAvatar); };
+                friendsDiv.appendChild(btn);
+            }
+        }
+
+        window.openPrivateChat = async function(friendName, displayName, avatarUrl) {
+            currentChatType = "private";
+            currentFriendName = friendName;
+            const sortedNames = [myName, friendName].sort();
+            currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
+
+            // Ambil data profil terbaru teman untuk header chat
+            let headerName = displayName || friendName;
+            let headerAvatar = avatarUrl || "";
+            try {
+                const snap = await getDoc(doc(db, "users", friendName));
+                if (snap.exists()) {
+                    let d = snap.data();
+                    if (d.displayName) headerName = d.displayName;
+                    if (d.avatar) headerAvatar = d.avatar;
+                }
+            } catch (e) {}
+
+            document.getElementById("chat-room-title").innerText = headerName;
+            const headerAvatarDiv = document.getElementById("chat-header-avatar");
+            if (headerAvatar) {
+                headerAvatarDiv.innerHTML = `<img src="${headerAvatar}" class="w-full h-full object-cover">`;
+            } else {
+                headerAvatarDiv.innerHTML = "👤";
+            }
+
+            document.getElementById("room-settings-container").classList.remove("hidden");
+            
+            checkAndUpdateTikTokStreak(currentChatId);
+            listenToUserStatus(friendName);
+            subscribeToMessages(currentChatId);
+
+            document.getElementById("view-sidebar").style.display = "none";
+            document.getElementById("view-chat").style.display = "flex";
+        }
+
+        window.openGroupChat = function(groupId, groupName) {
+            currentChatType = "group";
+            currentChatId = groupId;
+            currentFriendName = "";
+
+            document.getElementById("chat-room-title").innerText = "👥 " + groupName;
+            document.getElementById("chat-header-avatar").innerHTML = "👥";
+            document.getElementById("chat-room-status").innerText = "Grup Chat";
+            document.getElementById("room-settings-container").classList.add("hidden");
+            document.getElementById("tiktok-streak-badge").classList.add("hidden");
+
+            subscribeToMessages(groupId);
+
+            document.getElementById("view-sidebar").style.display = "none";
+            document.getElementById("view-chat").style.display = "flex";
+        }
+
+        window.backToSidebar = function() {
+            if (unsubscribeMessages) unsubscribeMessages();
+            if (unsubscribeRoomStatus) unsubscribeRoomStatus();
+            clearTypingStatus();
+            document.getElementById("view-chat").style.display = "none";
+            document.getElementById("view-sidebar").style.display = "flex";
+            loadListContent();
         }
 
         async function checkAndUpdateTikTokStreak(chatRoomId) {
@@ -596,64 +748,6 @@
                 document.getElementById("search-result-container").innerHTML = "";
                 loadMyFriendsList();
             }
-        }
-
-        function loadMyFriendsList() {
-            const friendsDiv = document.getElementById("friends-list");
-            let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
-            friendsDiv.innerHTML = "";
-            if (myFriends.length === 0) {
-                friendsDiv.innerHTML = `<div class="text-xs text-gray-500 italic py-2">Belum ada teman.</div>`;
-                return;
-            }
-            myFriends.forEach((uName) => {
-                const btn = document.createElement("button");
-                btn.className = "w-full text-left px-3 py-2.5 rounded-xl bg-[#1c1c1e] text-xs flex justify-between items-center mb-1";
-                btn.innerHTML = `<span class="font-semibold text-white">@${escapeHtml(uName)}</span> <span class="text-[10px] text-[#007AFF]">Chat ›</span>`;
-                btn.onclick = () => { openPrivateChat(uName); };
-                friendsDiv.appendChild(btn);
-            });
-        }
-
-        window.openPrivateChat = function(friendName) {
-            currentChatType = "private";
-            currentFriendName = friendName;
-            const sortedNames = [myName, friendName].sort();
-            currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
-
-            document.getElementById("chat-room-title").innerText = "@" + friendName;
-            document.getElementById("room-settings-container").classList.remove("hidden");
-            
-            checkAndUpdateTikTokStreak(currentChatId);
-            listenToUserStatus(friendName);
-            subscribeToMessages(currentChatId);
-
-            document.getElementById("view-sidebar").style.display = "none";
-            document.getElementById("view-chat").style.display = "flex";
-        }
-
-        window.openGroupChat = function(groupId, groupName) {
-            currentChatType = "group";
-            currentChatId = groupId;
-            currentFriendName = "";
-
-            document.getElementById("chat-room-title").innerText = "👥 " + groupName;
-            document.getElementById("chat-room-status").innerText = "Grup Chat";
-            document.getElementById("room-settings-container").classList.add("hidden");
-            document.getElementById("tiktok-streak-badge").classList.add("hidden");
-
-            subscribeToMessages(groupId);
-
-            document.getElementById("view-sidebar").style.display = "none";
-            document.getElementById("view-chat").style.display = "flex";
-        }
-
-        window.backToSidebar = function() {
-            if (unsubscribeMessages) unsubscribeMessages();
-            if (unsubscribeRoomStatus) unsubscribeRoomStatus();
-            clearTypingStatus();
-            document.getElementById("view-chat").style.display = "none";
-            document.getElementById("view-sidebar").style.display = "flex";
         }
 
         function listenToUserStatus(targetUserName) {
