@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - Friend Profile & Crop V36</title>
+    <title>Chatian - 1:1 Crop V37</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -142,7 +142,7 @@
             </div>
         </div>
 
-        <!-- HALAMAN 1.5: HALAMAN PROFIL SAYA & CROP TOOL -->
+        <!-- HALAMAN 1.5: HALAMAN PROFIL SAYA & CROP 1:1 -->
         <div id="view-profile" class="hidden absolute inset-0 flex-col bg-black z-20 overflow-hidden">
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0">
                 <button onclick="closeProfileView()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
@@ -150,7 +150,7 @@
             </header>
 
             <div class="p-6 flex-1 overflow-y-auto space-y-6 flex flex-col items-center">
-                <!-- Foto Profil Besar & Tool Crop -->
+                <!-- Foto Profil Besar -->
                 <div class="relative group">
                     <div id="profile-avatar-large" class="w-28 h-28 rounded-full bg-[#1c1c1e] border-2 border-white/20 flex items-center justify-center text-4xl overflow-hidden shadow-xl">
                         👤
@@ -161,17 +161,14 @@
                     </label>
                 </div>
 
-                <!-- Kotak Penyesuaian / Crop Sederhana -->
+                <!-- Kotak Penyesuaian Crop 1:1 -->
                 <div id="crop-container" class="hidden w-full max-w-xs bg-[#1c1c1e] p-4 rounded-2xl border border-white/10 space-y-3 text-center">
-                    <div class="text-xs font-bold text-white">Sesuaikan Area Foto (Zoom / Geser)</div>
-                    <div class="relative w-40 h-40 mx-auto overflow-hidden rounded-full border-2 border-[#007AFF] bg-black">
-                        <img id="crop-preview-img" class="absolute max-w-none cursor-grab" style="width: 150%; left: -25%; top: -25%;">
+                    <div class="text-xs font-bold text-white">Sesuaikan Foto (Rasio 1:1)</div>
+                    <div class="w-36 h-36 mx-auto overflow-hidden rounded-xl border border-white/20 bg-black flex items-center justify-center">
+                        <canvas id="crop-canvas" width="200" height="200" class="w-full h-full object-cover cursor-pointer"></canvas>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="adjustZoom(0.1)" class="flex-1 bg-[#2c2c2e] py-1.5 rounded-xl text-xs">Zoom +</button>
-                        <button onclick="adjustZoom(-0.1)" class="flex-1 bg-[#2c2c2e] py-1.5 rounded-xl text-xs">Zoom -</button>
-                    </div>
-                    <button onclick="applyCrop()" class="w-full bg-[#007AFF] text-white py-2 rounded-xl text-xs font-semibold">Terapkan Potongan</button>
+                    <p class="text-[10px] text-gray-400">Foto akan dipotong otomatis menjadi kotak 1:1 yang pas.</p>
+                    <button onclick="applyCrop()" class="w-full bg-[#007AFF] text-white py-2 rounded-xl text-xs font-semibold">Terapkan Foto</button>
                 </div>
 
                 <div class="w-full space-y-4 max-w-xs">
@@ -200,7 +197,6 @@
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2.5">
                     <button onclick="backToSidebar()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
-                    <!-- Profil Teman di Header Chat -->
                     <div class="flex items-center gap-2">
                         <div id="chat-header-avatar" class="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-xs overflow-hidden border border-white/10">
                             👤
@@ -208,7 +204,7 @@
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5">
                                 <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
-                                <div id="tiktok-streak-badge" onclick="clickStreakBadge()" class="hidden items-center gap-1 bg-gray-800 border border-gray-700 px-2 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer">
+                                <div id="tiktok-streak-badge" onclick="clickStreakBadge()" class="hidden items-center gap-1 bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer">
                                     <span id="streak-icon">🔥</span> <span id="streak-number">0</span>
                                 </div>
                             </div>
@@ -257,7 +253,7 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V36 -->
+    <!-- Firebase & Logika V37 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -289,7 +285,6 @@
         let replyingToData = null;
         let selectedMessageForAction = null;
         let typingTimeout = null;
-        let currentZoom = 1;
 
         setInterval(async () => {
             if (myName) {
@@ -366,41 +361,39 @@
             document.getElementById("view-profile").style.display = "none";
         }
 
-        // --- FITUR CROP / PENYESUAIAN FOTO PROFIL ---
+        // --- FITUR CROP OTOMATIS 1:1 ---
         window.startImageCrop = function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 1500 * 1024) { alert("Ukuran file maksimal 1.5MB!"); return; }
+            if (file.size > 2000 * 1024) { alert("Ukuran file maksimal 2MB!"); return; }
+            
             const reader = new FileReader();
             reader.onload = function(event) {
-                const imgEl = document.getElementById("crop-preview-img");
-                imgEl.src = event.target.result;
-                currentZoom = 1;
-                imgEl.style.transform = `scale(1)`;
-                document.getElementById("crop-container").classList.remove("hidden");
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById("crop-canvas");
+                    const ctx = canvas.getContext("2d");
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Potong tengah secara otomatis menjadi kotak (1:1)
+                    let size = Math.min(img.width, img.height);
+                    let startX = (img.width - size) / 2;
+                    let startY = (img.height - size) / 2;
+
+                    ctx.drawImage(img, startX, startY, size, size, 0, 0, canvas.width, canvas.height);
+                    document.getElementById("crop-container").classList.remove("hidden");
+                }
+                img.src = event.target.result;
             }
             reader.readAsDataURL(file);
         }
 
-        window.adjustZoom = function(amount) {
-            currentZoom = Math.max(1, currentZoom + amount);
-            const imgEl = document.getElementById("crop-preview-img");
-            imgEl.style.transform = `scale(${currentZoom})`;
-        }
-
         window.applyCrop = function() {
-            const imgEl = document.getElementById("crop-preview-img");
-            const canvas = document.createElement("canvas");
-            canvas.width = 300;
-            canvas.height = 300;
-            const ctx = canvas.getContext("2d");
-
-            ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
-            profilePicBase64 = canvas.toDataURL("image/jpeg", 0.85);
-
+            const canvas = document.getElementById("crop-canvas");
+            profilePicBase64 = canvas.toDataURL("image/jpeg", 0.9);
             document.getElementById("profile-avatar-large").innerHTML = `<img src="${profilePicBase64}" class="w-full h-full object-cover">`;
             document.getElementById("crop-container").classList.add("hidden");
-            alert("Foto berhasil dipotong dan disesuaikan!");
+            alert("Foto berhasil disesuaikan ke ukuran 1:1!");
         }
 
         window.saveUserProfile = async function() {
@@ -500,7 +493,7 @@
             });
         }
 
-        // --- RENDER DAFTAR TEMAN DENGAN FOTO PROFIL & NAMA ---
+        // --- RENDER DAFTAR TEMAN (BIO BERSIH TANPA KATA ONLINE) ---
         async function loadMyFriendsList() {
             const friendsDiv = document.getElementById("friends-list");
             let myFriends = JSON.parse(localStorage.getItem("my_friends_" + myName) || "[]");
@@ -513,7 +506,7 @@
             for (let uName of myFriends) {
                 let friendDisplayName = uName;
                 let friendAvatar = "";
-                let friendBio = "Online";
+                let friendBio = "Ada, sibuk"; // Bio default bersih
 
                 try {
                     const snap = await getDoc(doc(db, "users", uName));
@@ -551,7 +544,6 @@
             const sortedNames = [myName, friendName].sort();
             currentChatId = "private_" + sortedNames[0] + "_" + sortedNames[1];
 
-            // Ambil data profil terbaru teman untuk header chat
             let headerName = displayName || friendName;
             let headerAvatar = avatarUrl || "";
             try {
