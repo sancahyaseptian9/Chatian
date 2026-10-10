@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chatian - TikTok Streak V34</title>
+    <title>Chatian - Profile V35</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -97,12 +97,20 @@
     <!-- CONTAINER UTAMA -->
     <div class="fixed inset-0 w-full max-w-md mx-auto flex flex-col bg-black overflow-hidden">
         
-        <!-- SIDEBAR -->
+        <!-- HALAMAN 1: SIDEBAR / DAFTAR CHAT -->
         <div id="view-sidebar" class="absolute inset-0 flex flex-col bg-black z-10 overflow-hidden">
             <div class="px-4 py-4 bg-[#1c1c1e] border-b border-white/10 flex justify-between items-center shrink-0">
-                <div>
-                    <h1 class="text-lg font-bold text-white">Chatian</h1>
-                    <p class="text-xs text-gray-400" id="my-profile-name">@user</p>
+                <div class="flex items-center gap-3 cursor-pointer" onclick="openProfileView()">
+                    <div id="my-avatar-preview" class="w-10 h-10 rounded-full bg-[#2c2c2e] flex items-center justify-center text-lg overflow-hidden border border-white/20">
+                        👤
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="text-sm font-bold text-white" id="my-display-name">Chatian</h1>
+                            <span class="text-[10px] text-[#007AFF] bg-[#007AFF]/10 px-1.5 py-0.5 rounded">Profil ⚙️</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 truncate max-w-[150px]" id="my-profile-bio">Ada, sibuk</p>
+                    </div>
                 </div>
                 <button onclick="logoutUser()" class="text-xs text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full">Keluar</button>
             </div>
@@ -134,7 +142,47 @@
             </div>
         </div>
 
-        <!-- RUANG CHAT -->
+        <!-- HALAMAN 1.5: HALAMAN PROFIL PENGGUNA (ALA WHATSAPP) -->
+        <div id="view-profile" class="hidden absolute inset-0 flex-col bg-black z-20 overflow-hidden">
+            <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex items-center gap-3 shrink-0">
+                <button onclick="closeProfileView()" class="text-[#007AFF] text-sm font-semibold flex items-center">‹ Kembali</button>
+                <h2 class="font-bold text-sm text-white">Profil Saya</h2>
+            </header>
+
+            <div class="p-6 flex-1 overflow-y-auto space-y-6 flex flex-col items-center">
+                <!-- Foto Profil Besar -->
+                <div class="relative group">
+                    <div id="profile-avatar-large" class="w-28 h-28 rounded-full bg-[#1c1c1e] border-2 border-white/20 flex items-center justify-center text-4xl overflow-hidden shadow-xl">
+                        👤
+                    </div>
+                    <label class="absolute bottom-0 right-0 bg-[#007AFF] text-white p-2 rounded-full cursor-pointer shadow-lg text-xs">
+                        📷
+                        <input type="file" id="profile-pic-input" accept="image/*" onchange="uploadProfilePicture(event)" class="hidden">
+                    </label>
+                </div>
+
+                <div class="w-full space-y-4 max-w-xs">
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">Username (Unik)</label>
+                        <input type="text" id="profile-username-display" readonly class="w-full bg-[#1c1c1e] text-gray-400 rounded-xl px-3 py-2.5 text-xs outline-none border border-white/5 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">Nama Tampilan</label>
+                        <input type="text" id="profile-name-input" placeholder="Nama Anda..." class="w-full bg-[#2c2c2e] text-white rounded-xl px-3 py-2.5 text-xs outline-none border border-white/10 focus:border-[#007AFF]">
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] text-gray-400 block mb-1">Info / Bio Status</label>
+                        <input type="text" id="profile-bio-input" placeholder="Contoh: Sedang sibuk" class="w-full bg-[#2c2c2e] text-white rounded-xl px-3 py-2.5 text-xs outline-none border border-white/10 focus:border-[#007AFF]">
+                    </div>
+
+                    <button onclick="saveUserProfile()" class="w-full bg-[#007AFF] text-white py-3 rounded-xl text-xs font-semibold shadow-lg">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HALAMAN 2: RUANG CHAT -->
         <div id="view-chat" class="hidden absolute inset-0 flex-col bg-black z-30 overflow-hidden">
             <header class="bg-[#1c1c1e] border-b border-white/10 px-4 py-3 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
@@ -142,7 +190,6 @@
                     <div class="flex flex-col">
                         <div class="flex items-center gap-1.5">
                             <h2 class="font-bold text-sm text-white" id="chat-room-title">Pilih Chat</h2>
-                            <!-- TikTok Streak Badge dengan Animasi dan Status Nyala/Mati -->
                             <div id="tiktok-streak-badge" onclick="clickStreakBadge()" class="hidden items-center gap-1 bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer">
                                 <span id="streak-icon">🔥</span> <span id="streak-number">0</span>
                             </div>
@@ -191,7 +238,7 @@
         </div>
     </div>
 
-    <!-- Firebase & Logika V34 -->
+    <!-- Firebase & Logika V35 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -219,6 +266,7 @@
         let unsubscribeMessages = null;
         let unsubscribeRoomStatus = null;
         let base64ImageString = "";
+        let profilePicBase64 = "";
         let replyingToData = null;
         let selectedMessageForAction = null;
         let typingTimeout = null;
@@ -236,19 +284,97 @@
             if (user) {
                 myName = user.displayName ? user.displayName.replace(/\s+/g, "_") : user.email.split("@")[0];
                 loginModal.style.display = "none";
-                document.getElementById("my-profile-name").innerText = "@" + myName;
 
-                await setDoc(doc(db, "users", myName), {
+                // Ambil atau buat data profil user di Firestore
+                const userRef = doc(db, "users", myName);
+                const userSnap = await getDoc(userRef);
+
+                let displayName = user.displayName || myName;
+                let bio = "Ada, sibuk";
+                let avatar = "";
+
+                if (userSnap.exists()) {
+                    let d = userSnap.data();
+                    if (d.displayName) displayName = d.displayName;
+                    if (d.bio) bio = d.bio;
+                    if (d.avatar) avatar = d.avatar;
+                }
+
+                await setDoc(userRef, {
                     name: myName,
+                    displayName: displayName,
+                    bio: bio,
+                    avatar: avatar,
                     email: user.email,
                     lastActive: serverTimestamp()
                 }, { merge: true });
 
+                updateSidebarProfileUI(displayName, bio, avatar);
                 loadListContent();
             } else {
                 loginModal.style.display = "flex";
             }
         });
+
+        function updateSidebarProfileUI(displayName, bio, avatar) {
+            document.getElementById("my-display-name").innerText = displayName;
+            document.getElementById("my-profile-bio").innerText = bio;
+            const avatarDiv = document.getElementById("my-avatar-preview");
+            if (avatar) {
+                avatarDiv.innerHTML = `<img src="${avatar}" class="w-full h-full object-cover">`;
+            } else {
+                avatarDiv.innerHTML = "👤";
+            }
+        }
+
+        window.openProfileView = async function() {
+            document.getElementById("profile-username-display").value = "@" + myName;
+            const userSnap = await getDoc(doc(db, "users", myName));
+            if (userSnap.exists()) {
+                let d = userSnap.data();
+                document.getElementById("profile-name-input").value = d.displayName || myName;
+                document.getElementById("profile-bio-input").value = d.bio || "";
+                if (d.avatar) {
+                    profilePicBase64 = d.avatar;
+                    document.getElementById("profile-avatar-large").innerHTML = `<img src="${d.avatar}" class="w-full h-full object-cover">`;
+                }
+            }
+            document.getElementById("view-profile").style.display = "flex";
+        }
+
+        window.closeProfileView = function() {
+            document.getElementById("view-profile").style.display = "none";
+        }
+
+        window.uploadProfilePicture = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 800 * 1024) { alert("Maksimal ukuran foto 800KB!"); return; }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                profilePicBase64 = event.target.result;
+                document.getElementById("profile-avatar-large").innerHTML = `<img src="${profilePicBase64}" class="w-full h-full object-cover">`;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.saveUserProfile = async function() {
+            const newName = document.getElementById("profile-name-input").value.trim() || myName;
+            const newBio = document.getElementById("profile-bio-input").value.trim() || "Ada, sibuk";
+
+            try {
+                await updateDoc(doc(db, "users", myName), {
+                    displayName: newName,
+                    bio: newBio,
+                    avatar: profilePicBase64 || ""
+                });
+                updateSidebarProfileUI(newName, newBio, profilePicBase64);
+                alert("Profil berhasil diperbarui!");
+                closeProfileView();
+            } catch (err) {
+                alert("Gagal menyimpan profil.");
+            }
+        }
 
         window.loginWithGoogle = async function() {
             try {
@@ -329,14 +455,12 @@
             });
         }
 
-        // --- SISTEM TIKTOK STREAK MUTUAL YANG OTENTIK ---
         async function checkAndUpdateTikTokStreak(chatRoomId) {
             if (!chatRoomId || currentChatType !== "private") return;
             const today = new Date().toISOString().slice(0, 10);
             let streakKey = "tiktok_streak_" + chatRoomId;
-            let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 0, "lastDate": "", "sentToday": {}, "status": "dead"}');
+            let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 0, "lastDate": "", "status": "waiting"}');
 
-            // Cek pesan hari ini dari kedua belah pihak di Firestore
             const q = query(collection(db, chatRoomId));
             const snapshot = await getDocs(q);
             
@@ -354,24 +478,21 @@
                 }
             });
 
-            // Logika TikTok Streak: Harus dua-duanya chat hari ini agar api menyala!
             if (iChattedToday && friendChattedToday) {
                 if (streakData.lastDate !== today) {
-                    // Jika kemarin sudah nyala, streak bertambah 1. Jika kemarin mati, mulai dari 1.
                     let yesterday = getYesterdayDate();
                     if (streakData.lastDate === yesterday || streakData.streak === 0) {
                         streakData.streak += 1;
                     } else if (streakData.lastDate !== today) {
-                        streakData.streak = 1; // Reset jika putus
+                        streakData.streak = 1;
                     }
                     streakData.lastDate = today;
                     streakData.status = "active";
                 }
             } else {
-                // Cek apakah kemarin mati (jika hari ini belum lengkap dan kemarin terlewat)
                 let yesterday = getYesterdayDate();
                 if (streakData.lastDate && streakData.lastDate !== yesterday && streakData.lastDate !== today) {
-                    streakData.status = "expired"; // Mati karena lewat sehari tanpa chat mutual
+                    streakData.status = "expired";
                 } else if (!streakData.lastDate) {
                     streakData.status = "waiting";
                 }
@@ -401,15 +522,12 @@
             streakNum.innerText = streakData.streak;
 
             if (streakData.status === "active") {
-                // Streak menyala dengan animasi api TikTok
                 badge.className = "flex items-center gap-1 bg-orange-500/20 border border-orange-500/40 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-orange-400 streak-active-anim cursor-pointer";
                 streakIcon.innerText = "🔥";
             } else if (streakData.status === "expired") {
-                // Streak mati karena lewat sehari
                 badge.className = "flex items-center gap-1 bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-red-400 cursor-pointer";
-                streakIcon.innerText = "⏳"; // Jam pasir / tanda mati
+                streakIcon.innerText = "⏳";
             } else {
-                // Menunggu kedua pihak saling chat hari ini
                 badge.className = "flex items-center gap-1 bg-gray-800 border border-gray-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-gray-400 cursor-pointer";
                 streakIcon.innerText = "🔥";
             }
@@ -420,16 +538,16 @@
             let streakData = JSON.parse(localStorage.getItem(streakKey) || '{"streak": 0, "status": "waiting"}');
             
             if (streakData.status === "active") {
-                alert(`🔥 TikTok Streak Level ${streakData.streak}!\nKalian berdua harus saling mengirim pesan setiap hari agar api ini tetap menyala.`);
+                alert(`🔥 TikTok Streak Level ${streakData.streak}!\nKalian berdua saling chat hari ini.`);
             } else if (streakData.status === "expired") {
-                if (confirm("Streak kalian padam karena sehari tidak ada interaksi mutual! Ingin memulihkannya (Restore)?")) {
+                if (confirm("Streak kalian padam karena sehari tidak ada interaksi mutual! Ingin memulihkannya?")) {
                     streakData.status = "active";
                     localStorage.setItem(streakKey, JSON.stringify(streakData));
                     updateTikTokStreakUI(currentChatId);
                     alert("💖 Streak berhasil dipulihkan!");
                 }
             } else {
-                alert(`🔥 Streak: ${streakData.streak}\nStatus: Menunggu kalian berdua saling mengirim pesan hari ini agar apinya menyala!`);
+                alert(`🔥 Streak: ${streakData.streak}\nStatus: Menunggu kalian berdua saling mengirim pesan hari ini.`);
             }
         }
 
@@ -442,35 +560,6 @@
             localStorage.setItem(streakKey, JSON.stringify(streakData));
             updateTikTokStreakUI(currentChatId);
             alert("💖 Streak berhasil dipulihkan!");
-        }
-
-        function updateRoomPetUI(chatRoomId) {
-            if (currentChatType !== "private") return;
-            let petKey = "room_pet_" + myName + "_" + chatRoomId;
-            let petData = JSON.parse(localStorage.getItem(petKey) || '{"name": "Mochi", "icon": "🐶"}');
-            document.getElementById("dropdown-pet-info").innerText = `${petData.icon} ${petData.name}`;
-        }
-
-        window.togglePetModal = function(show) {
-            const modal = document.getElementById("pet-modal");
-            if (show) {
-                let petKey = "room_pet_" + myName + "_" + currentChatId;
-                let petData = JSON.parse(localStorage.getItem(petKey) || '{"name": "Mochi", "icon": "🐶"}');
-                document.getElementById("pet-name-input").value = petData.name;
-                document.getElementById("pet-type-select").value = petData.icon;
-                modal.classList.remove("hidden");
-            } else {
-                modal.classList.add("hidden");
-            }
-        }
-
-        window.saveCustomPet = function() {
-            const name = document.getElementById("pet-name-input").value.trim() || "Peliharaan";
-            const icon = document.getElementById("pet-type-select").value;
-            let petKey = "room_pet_" + myName + "_" + currentChatId;
-            localStorage.setItem(petKey, JSON.stringify({ name, icon }));
-            togglePetModal(false);
-            updateRoomPetUI(currentChatId);
         }
 
         window.toggleDropdownMenu = function() {
@@ -536,8 +625,6 @@
             document.getElementById("room-settings-container").classList.remove("hidden");
             
             checkAndUpdateTikTokStreak(currentChatId);
-            updateRoomPetUI(currentChatId);
-            
             listenToUserStatus(friendName);
             subscribeToMessages(currentChatId);
 
@@ -640,7 +727,6 @@
                     return;
                 }
 
-                // Update status read (C2 Biru)
                 const batch = writeBatch(db);
                 let needCommit = false;
 
@@ -655,7 +741,6 @@
                     await batch.commit().catch(() => {});
                 }
 
-                // Setiap kali ada pesan baru masuk, cek ulang status TikTok Streak
                 if (currentChatType === "private") {
                     checkAndUpdateTikTokStreak(currentChatId);
                 }
@@ -707,7 +792,6 @@
                         ${reactionsHtml}
                     `;
 
-                    // Gestur Swipe Kanan untuk Reply
                     let startX = 0;
                     bubbleDiv.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, {passive: true});
                     bubbleDiv.addEventListener('touchmove', (e) => {
@@ -720,7 +804,6 @@
                         if (diffX > 50) triggerReply(docId, data.text || '[Gambar]', data.name);
                     });
 
-                    // Gestur Long Press untuk Menu Aksi
                     let pressTimer = null;
                     const startPress = () => {
                         if (pressTimer) clearTimeout(pressTimer);
@@ -820,7 +903,7 @@
         window.previewImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
-            if (file.size > 800 * 1024) { alert("Mksimal 800KB!"); return; }
+            if (file.size > 800 * 1024) { alert("Maksimal 800KB!"); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 base64ImageString = e.target.result;
@@ -864,7 +947,6 @@
                 cancelImage();
                 cancelReply();
 
-                // Perbarui streak setelah mengirim pesan
                 if (currentChatType === "private") {
                     await checkAndUpdateTikTokStreak(currentChatId);
                 }
